@@ -54,11 +54,12 @@ class Node(INode):
 
 class LinkedList:
     def __init__(self, head: Any = None, node_type: INode = Node):
-        self.head = None
         if not issubclass(node_type, INode):
             raise TypeError(f"Invalid node type ({type(node_type)}).")
+        self._i = None
         self._node_type = node_type
-        if isinstance(head, Container) and len(head) > 1:
+        if isinstance(head, Iterable):
+            self.head = None
             for i in head:
                 self.append(i)
         elif isinstance(head, INode) or head == None:
@@ -237,17 +238,20 @@ class LinkedList:
             while current:
                 self.append(current.data)
                 current = current.next_node
-        elif isinstance(other, (Sequence, Generator)):
+        elif isinstance(other, Iterable):
             self._add_from_iterable(other)
         else:
             self.append(other)
         return self
-
+    
     def __add__(self, other: Any):
         return self.copy()._add(other)
 
     def __iadd__(self, other: Any):
         return self._add(other)
+
+    def __len__(self) -> int:
+        return self.size
 
     def __getitem__(self, index: int):
         if not isinstance(index, int):
@@ -261,20 +265,20 @@ class LinkedList:
             current = current.next_node
         return current
     
-    def __iter__(self):
-        if self.is_empty():
-            raise ValueError("Cannot iterate over empty list.")
-        def _generator(self: LinkedList):
-            current = self.head
-            while current:
-                yield current
-                current = current.next_node
-            del self._i
-        self._i = _generator(self)
-        return self._i
+    def _generator(self):
+        current = self.head
+        while current:
+            yield current
+            current = current.next_node
+        self._i = None
     
+    def __iter__(self):
+        return self._generator()
+
     def __next__(self):
-        return self._i
+        if not self._i:
+            self._i = self._generator()
+        return next(self._i)
 
     def __repr__(self):
         nodes = []
