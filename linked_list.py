@@ -259,18 +259,38 @@ class LinkedList:
 
     def __len__(self) -> int:
         return self.size
-
-    def __getitem__(self, index: int):
-        if not isinstance(index, int):
-            raise TypeError(f"Index type should be an int, not {type(index)}.")
-        if self.is_empty() or index >= self.size:
+    
+    def _get_item(self, index: int, start_node: INode = None) -> INode:
+        if self.is_empty():
+            raise IndexError("Cannot get an item from an empty list.")
+        if index >= len(self):
             raise IndexError(f"Sequence index {index} out of range.")
-        current = self.head
+        if index < 0:
+            raise ValueError("Index cannot be negative.")
+        current = start_node if start_node else self.head
         count = 0
-        while count != index:
+        while count < index:
             count += 1
             current = current.next_node
         return current
+
+    def __getitem__(self, index: Union[int, slice]):
+        if not isinstance(index, (int, slice)):
+            raise TypeError(
+                f"Index should be an int or a slice object, not {type(index)}."
+            )
+        if isinstance(index, int):
+            return self._get_item(index)
+        elif isinstance(index, slice):
+            start, stop, step = index.indices(len(self))
+            current = self._get_item(start)
+            new_list = LinkedList(self._create_new_node(current))
+            count = start + step
+            while count < stop:
+                count += step
+                current = self._get_item(step, current)
+                new_list.append(self._create_new_node(current))
+            return new_list
     
     def _generator(self):
         current = self.head
