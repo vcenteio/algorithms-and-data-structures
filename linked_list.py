@@ -52,31 +52,19 @@ class Node(INode):
         self._next = next_node
 
 
-class ILinkedList(ABC):
-    @property
-    @abstractmethod
-    def size(self):
-        ...
-
-    @abstractmethod
-    def is_empty(self):
-        ...
-
-    @abstractmethod
-    def append(self, new_item: Any) -> None:
-        ...
-
-
-class LinkedList(ILinkedList):
-    def __init__(self, head: Any = None):
+class LinkedList:
+    def __init__(self, head: Any = None, node_type: INode = Node):
         self.head = None
+        if not issubclass(node_type, INode):
+            raise TypeError(f"Invalid node type ({type(node_type)}).")
+        self._node_type = node_type
         if isinstance(head, Container) and len(head) > 1:
             for i in head:
                 self.append(i)
-        elif isinstance(head, Node) or head == None:
+        elif isinstance(head, INode) or head == None:
             self.head = head
         elif head:
-            self.head = Node(head)
+            self.head = node_type(head)
     
     @property
     def size(self):
@@ -99,33 +87,19 @@ class LinkedList(ILinkedList):
     def is_empty(self):
         return self.head == None
     
+    def _create_new_node(self, item: Any) -> INode:
+        new_node_data = item.data if isinstance(item, INode) else item
+        return self._node_type(new_node_data)
+    
     def append(self, new_item: Any) -> None:
-        if isinstance(new_item, Node):
-            new_node = Node(new_item.data)
-        else:
-            new_node = Node(new_item)
+        new_node = self._create_new_node(new_item)
         if self.is_empty():
             self.head = new_node
         else:
             self.tail.set_next_node(new_node)
-    
-    def pop(self) -> Union[Node, None]:
-        item = None
-        if not self.is_empty():
-            n = self.size
-            if n > 1:
-                new_tail = self[n-2]
-                item = new_tail.next_node
-                new_tail.set_next_node(None)
-            else:
-                item, self.head = self.head, None
-        return item
 
     def prepend(self, new_item: Any) -> None:
-        if isinstance(new_item, Node):
-            new_node = Node(new_item.data)
-        else:
-            new_node = Node(new_item)
+        new_node = self._create_new_node(new_item)
         new_node.set_next_node(self.head)
         self.head = new_node
     
@@ -137,25 +111,37 @@ class LinkedList(ILinkedList):
                 f"Negative sequence indexes are not yet implemented.")
         if index > self.size:
             raise IndexError(f"Sequence index {index} out of range.")
-        new_node = Node(new_item)
+        new_node = self._create_new_node(new_item)
         if index == 0:
             self.prepend(new_node)
         elif index == self.size:
             self.append(new_node)
         else:
-            previous_item = self[index-1]
-            new_node.set_next_node(previous_item.next_node)
-            previous_item.set_next_node(new_node)
+            node_before = self[index-1]
+            new_node.set_next_node(node_before.next_node)
+            node_before.set_next_node(new_node)
 
-    def search(self, item) -> Union[int, None]:
+    def search(self, item: Any) -> Union[int, None]:
         current = self.head
-        count = 0
+        index = 0
         while current:
             if current.data == item:
-                return count 
+                return index 
             current = current.next_node
-            count += 1
+            index += 1
         return None
+
+    def pop(self) -> Union[Node, None]:
+        item = None
+        if not self.is_empty():
+            n = self.size
+            if n > 1:
+                new_tail = self[n-2]
+                item = new_tail.next_node
+                new_tail.set_next_node(None)
+            else:
+                item, self.head = self.head, None
+        return item
     
     def remove(self, item: Any) -> int:
         current = self.head
@@ -163,7 +149,6 @@ class LinkedList(ILinkedList):
         while self.head and current:
             if self.head.data == item:
                 item_to_remove, self.head = self.head, self.head.next_node
-                del item_to_remove 
                 count += 1
             else:
                 previous = self.head 
@@ -172,7 +157,6 @@ class LinkedList(ILinkedList):
                     if current.data == item:
                         item_to_remove = current
                         previous.set_next_node(item_to_remove.next_node)
-                        del item_to_remove
                         current = previous.next_node
                         count += 1
                     else:
@@ -194,9 +178,7 @@ class LinkedList(ILinkedList):
         
     def clear(self) -> None:
         while self.head:
-            item_to_remove = self.head 
             self.head = self.head.next_node
-            del item_to_remove
     
     def split(self, index=None) -> tuple["LinkedList", "LinkedList"]:
         n = self.size
@@ -309,6 +291,3 @@ if __name__ == "__main__":
     l2 = LinkedList([randint(0, 100) for i in range(20)])
     l3 = LinkedList([randint(0, 1000) for i in range(100)])
     g = (i for i in range(10))
-
-    for i in l1:
-        print(i)
