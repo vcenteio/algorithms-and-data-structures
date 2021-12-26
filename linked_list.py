@@ -60,8 +60,7 @@ class LinkedList:
         self._node_type = node_type
         if isinstance(head, Iterable):
             self.head = None
-            for i in head:
-                self.append(i)
+            self._add_from_iterable(head)
         elif isinstance(head, INode) or head == None:
             self.head = head
         elif head:
@@ -88,6 +87,15 @@ class LinkedList:
     def is_empty(self):
         return self.head == None
     
+    def count(self, item) -> int:
+        current = self.head
+        count = 0
+        while current:
+            if current.data == item:
+                count += 1
+            current = current.next_node
+        return count
+    
     def _create_new_node(self, item: Any) -> INode:
         new_node_data = item.data if isinstance(item, INode) else item
         return self._node_type(new_node_data)
@@ -106,18 +114,18 @@ class LinkedList:
     
     def insert(self, new_item: Any, index = 0) -> None:
         if not isinstance(index, int) or isinstance(index, bool):
-            raise TypeError(f"Index type should be an int, not {type(index).__name__}.")
+            raise TypeError(
+                f"Index type should be an int, not {type(index).__name__}."
+            )
         if index < 0:
             raise NotImplementedError(
                 f"Negative sequence indexes are not yet implemented.")
         if index > self.size:
             raise IndexError(f"Sequence index {index} out of range.")
-        new_node = self._create_new_node(new_item)
         if index == 0:
-            self.prepend(new_node)
-        elif index == self.size:
-            self.append(new_node)
+            self.prepend(new_item)
         else:
+            new_node = self._create_new_node(new_item)
             node_before = self[index-1]
             new_node.set_next_node(node_before.next_node)
             node_before.set_next_node(new_node)
@@ -149,16 +157,15 @@ class LinkedList:
         count = 0
         while self.head and current:
             if self.head.data == item:
-                item_to_remove, self.head = self.head, self.head.next_node
+                self.head = self.head.next_node
                 count += 1
             else:
                 previous = self.head 
                 current = self.head.next_node
                 while current:
                     if current.data == item:
-                        item_to_remove = current
-                        previous.set_next_node(item_to_remove.next_node)
-                        current = previous.next_node
+                        previous.set_next_node(current.next_node)
+                        current = current.next_node
                         count += 1
                     else:
                         previous = current
