@@ -1,5 +1,6 @@
 ﻿from abc import ABC, abstractmethod
-from typing import Any, Container, Generator, Iterable, MutableSequence, Sequence, Union
+from typing import Any, Container, Generator, Iterable
+from typing import MutableSequence, Sequence, Union, Tuple
 
 
 class INode(ABC):
@@ -188,7 +189,7 @@ class LinkedList:
         while self.head:
             self.head = self.head.next_node
     
-    def split(self, index=None) -> tuple["LinkedList", "LinkedList"]:
+    def split(self, index=None) -> Tuple["LinkedList", "LinkedList"]:
         n = self.size
         if n < 2:
             left_half, right_half = self, LinkedList()
