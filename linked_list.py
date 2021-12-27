@@ -52,10 +52,12 @@ class Node(INode):
     def set_next_node(self, next_node: "Node"):
         self._next = next_node
 
+
 def get_class_name(obj: Any):
     return obj.__class__.__name__
 
-class LinkedList:
+
+class LinkedList(MutableSequence):
     def __init__(self, head: Any = None, node_type: INode = Node):
         if not issubclass(node_type, INode):
             raise TypeError(f"Invalid node type ({type(node_type)}).")
@@ -132,6 +134,10 @@ class LinkedList:
             node_before = self[index-1]
             new_node.set_next_node(node_before.next_node)
             node_before.set_next_node(new_node)
+    
+    def extend(self, new_item) -> "LinkedList":
+        self += new_item
+        return self
 
     def search(self, item: Any) -> Union[int, None]:
         current = self.head
@@ -142,6 +148,12 @@ class LinkedList:
             current = current.next_node
             index += 1
         return None
+    
+    def index(self, item: Any) -> int:
+        index = self.search(item)
+        if index == None:
+            raise ValueError(f"{item} is not in linked list.")
+        return index
 
     def pop(self) -> Union[Node, None]:
         item = None
@@ -185,6 +197,14 @@ class LinkedList:
                 new_list.append(current)
                 current = current.next_node
                 count += 1
+        return new_list
+    
+    def reverse(self):
+        new_list = LinkedList()
+        current = self.head
+        while current:
+            new_list.prepend(current)
+            current = current.next_node
         return new_list
         
     def clear(self) -> None:
@@ -253,11 +273,11 @@ class LinkedList:
     def __add__(self, other: Any):
         return self.copy()._add(other)
 
-    def __iadd__(self, other: Any):
-        return self._add(other)
-    
     def __radd__(self, other: Any):
         return self.copy()._add(other)
+
+    def __iadd__(self, other: Any):
+        return self._add(other)
 
     def _multiply(self, value: int):
         if not isinstance(value, int):
@@ -285,11 +305,17 @@ class LinkedList:
     def __mul__(self, other: int):
         return self.copy()._multiply(other)
     
+    def __rmul__(self, other: int):
+        return self.copy()._multiply(other)
+    
     def __imul__(self, other: int):
         return self._multiply(other)
 
     def __len__(self) -> int:
         return self.size
+    
+    def __bool__(self) -> bool:
+        return self.size != 0
     
     def _get_item(self, index: int, start_node: INode = None) -> INode:
         if self.is_empty():
@@ -326,6 +352,22 @@ class LinkedList:
                 new_list.append(self._create_new_node(current))
             return new_list
     
+    def __setitem__(self, index: int, value: Any) -> None:
+        item = self.__getitem__(index)
+        item.data = self._create_new_node(value)
+    
+    def __delitem__(self, index: int) -> None:
+        if not isinstance(index, int):
+            raise ValueError("Only indexes of type int are allowed.")
+        if index == 0 or index + self.size == 0:
+            item_to_remove = self.head
+            self.head = self.head.next_node
+        else:
+            item_to_remove = self.__getitem__(index)
+            previous = self.__getitem__(index-1)
+            previous.set_next_node(item_to_remove.next_node)
+        del item_to_remove
+    
     def _generator(self):
         current = self.head
         while current:
@@ -353,6 +395,7 @@ class LinkedList:
         return " -> ".join(nodes)
 
 
+# for manual test purposes
 if __name__ == "__main__":
     from random import randint
     l1 = LinkedList([0,1,2])
