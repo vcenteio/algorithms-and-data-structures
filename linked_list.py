@@ -52,6 +52,8 @@ class Node(INode):
     def set_next_node(self, next_node: "Node"):
         self._next = next_node
 
+def get_class_name(obj: Any):
+    return obj.__class__.__name__
 
 class LinkedList:
     def __init__(self, head: Any = None, node_type: INode = Node):
@@ -253,17 +255,50 @@ class LinkedList:
 
     def __iadd__(self, other: Any):
         return self._add(other)
+    
+    def __radd__(self, other: Any):
+        return self.copy()._add(other)
+
+    def _multiply(self, value: int):
+        if not isinstance(value, int):
+            raise TypeError(
+                "Can't multiply sequence " \
+                f"by non-int of type '{get_class_name(value)}'"
+            )
+        if value < 0:
+            raise ValueError(
+                "Multiplication of linked lists "\
+                "by negative numbers is not suported."
+            )
+        if value == 0:
+            self.clear()
+            return self
+        if value == 1:
+            return self
+        count = 1
+        copy = self.copy()
+        while count < value:
+            self += copy
+            count += 1
+        return self
+
+    def __mul__(self, other: int):
+        return self.copy()._multiply(other)
+    
+    def __imul__(self, other: int):
+        return self._multiply(other)
 
     def __len__(self) -> int:
         return self.size
     
     def _get_item(self, index: int, start_node: INode = None) -> INode:
         if self.is_empty():
-            raise IndexError("Cannot get an item from an empty list.")
-        if index >= len(self):
+            raise IndexError("Cannot get item from empty list.")
+        n = self.size
+        if index >= n or index + n < 0:
             raise IndexError(f"Sequence index {index} out of range.")
         if index < 0:
-            raise ValueError("Index cannot be negative.")
+            index += n
         current = start_node if start_node else self.head
         count = 0
         while count < index:
@@ -279,7 +314,9 @@ class LinkedList:
         if isinstance(index, int):
             return self._get_item(index)
         elif isinstance(index, slice):
-            start, stop, step = index.indices(len(self))
+            start, stop, step = index.indices(self.size)
+            if step < 1:
+                raise ValueError("Negative step value is not supported.")
             current = self._get_item(start)
             new_list = LinkedList(self._create_new_node(current))
             count = start + step
@@ -318,7 +355,7 @@ class LinkedList:
 
 if __name__ == "__main__":
     from random import randint
-    l1 = LinkedList()
+    l1 = LinkedList([0,1,2])
     l2 = LinkedList([randint(0, 100) for i in range(20)])
     l3 = LinkedList([randint(0, 1000) for i in range(100)])
     g = (i for i in range(10))
