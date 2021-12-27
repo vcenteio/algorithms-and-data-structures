@@ -1,6 +1,7 @@
 ﻿from abc import ABC, abstractmethod
 from typing import Any, Container, Generator, Iterable
 from typing import MutableSequence, Sequence, Union, Tuple
+from tools import *
 
 
 class INode(ABC):
@@ -51,10 +52,6 @@ class Node(INode):
 
     def set_next_node(self, next_node: "Node"):
         self._next = next_node
-
-
-def get_class_name(obj: Any):
-    return obj.__class__.__name__
 
 
 class LinkedList(MutableSequence):
@@ -155,17 +152,31 @@ class LinkedList(MutableSequence):
             raise ValueError(f"{item} is not in linked list.")
         return index
 
-    def pop(self) -> Union[Node, None]:
-        item = None
-        if not self.is_empty():
-            n = self.size
-            if n > 1:
-                new_tail = self[n-2]
-                item = new_tail.next_node
-                new_tail.set_next_node(None)
-            else:
-                item, self.head = self.head, None
-        return item
+    def _pop_head(self):
+        item_to_remove = self.head
+        self.head = self.head.next_node
+        return item_to_remove
+    
+    def _remove_by_index(self, index: int):
+        if not isinstance(index, int):
+            raise TypeError(
+                f"Index must be an int, not {get_class_name(index)}"
+            )
+        item_to_remove = self.__getitem__(index)
+        previous = self.__getitem__(index-1)
+        previous.set_next_node(item_to_remove.next_node)
+        return item_to_remove
+
+    def pop(self, index: int = None) -> Union[Node, None]:
+        if self.is_empty():
+            raise IndexError("Empty list.")
+        if index == None:
+            index = self.size-1
+        if index == 0 or index + self.size == 0:
+            item_to_remove = self._pop_head()
+        else:
+            item_to_remove = self._remove_by_index(index)
+        return item_to_remove
     
     def remove(self, item: Any) -> int:
         current = self.head
@@ -359,13 +370,7 @@ class LinkedList(MutableSequence):
     def __delitem__(self, index: int) -> None:
         if not isinstance(index, int):
             raise ValueError("Only indexes of type int are allowed.")
-        if index == 0 or index + self.size == 0:
-            item_to_remove = self.head
-            self.head = self.head.next_node
-        else:
-            item_to_remove = self.__getitem__(index)
-            previous = self.__getitem__(index-1)
-            previous.set_next_node(item_to_remove.next_node)
+        item_to_remove = self.pop(index)
         del item_to_remove
     
     def _generator(self):
