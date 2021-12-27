@@ -58,7 +58,7 @@ class LinkedList:
             raise TypeError(f"Invalid node type ({type(node_type)}).")
         self._i = None
         self._node_type = node_type
-        if isinstance(head, Iterable):
+        if isinstance(head, Iterable) and not isinstance(head, (str, bytes)):
             self.head = None
             self._add_from_iterable(head)
         elif isinstance(head, INode) or head == None:
@@ -240,12 +240,8 @@ class LinkedList:
             self.append(i)
     
     def _add(self, other: Any):
-        if isinstance(other, LinkedList):
-            current = other.head
-            while current:
-                self.append(current.data)
-                current = current.next_node
-        elif isinstance(other, Iterable):
+        if isinstance(other, Iterable) and \
+                not isinstance(other, (str, bytes)):
             self._add_from_iterable(other)
         else:
             self.append(other)
@@ -306,6 +302,9 @@ class LinkedList:
         if not self._i:
             self._i = self._generator()
         return next(self._i)
+    
+    def __contains__(self, item: Any) -> bool:
+        return self.search(item) != None
 
     def __repr__(self):
         nodes = []
