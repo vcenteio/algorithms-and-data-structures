@@ -8,7 +8,7 @@ def selection_sort(seq: Union[Sequence, Mapping]) -> Union[Sequence, Mapping]:
     if not isinstance(seq, (Sequence, Mapping)):
         raise TypeError(f"Inappropriate argument type ({get_class_name(seq)}).")
     seq_type = seq.__class__
-    seq_copy = seq.copy()
+    seq_copy = seq.copy() if hasattr(seq, "copy") else seq[:]
     is_mapping = isinstance(seq, Mapping) 
     sorted_seq = dict() if is_mapping else list() 
     min_func = min if is_mapping else minindex
