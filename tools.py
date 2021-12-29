@@ -3,12 +3,19 @@ from random import shuffle
 
 
 def is_sorted(seq: Sequence) -> bool:
-    for i in range(len(seq)-1):
-        if seq[i] > seq[i+1]:
-            return False
+    iter_obj = iter(seq)
+    current_item = next(iter_obj)
+    while True:
+        try:
+            next_item = next(iter_obj)
+            if current_item > next_item:
+                return False
+            current_item = next_item
+        except StopIteration:
+            break
     return True
 
-def get_class_name(obj: Any):
+def get_class_name(obj: Any) -> str:
     return obj.__class__.__name__
 
 def generate_random_indexes(length: int) -> list:

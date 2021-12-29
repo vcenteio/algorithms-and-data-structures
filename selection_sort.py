@@ -21,7 +21,7 @@ def selection_sort(seq: Union[Sequence, Mapping]) -> Union[Sequence, Mapping]:
     return seq_type(sorted_seq)
 
 
-# for manual test purposes
+# for manual testing purposes
 if __name__ == "__main__":
     l1 = scrumble(LinkedList((i for i in range(10))))
     l2 = [randint(0,10) for i in range(10)]

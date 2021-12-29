@@ -1,57 +1,7 @@
-﻿from abc import ABC, abstractmethod
-from typing import Any, Container, Generator, Iterable
+﻿from typing import Any, Iterable
 from typing import MutableSequence, Sequence, Union, Tuple
 from tools import *
-
-
-class INode(ABC):
-    data: Any = None
-    _next: "INode" = None
-
-    @property
-    @abstractmethod
-    def next_node(self) -> "INode":
-        ...
-
-    @abstractmethod
-    def set_next_node(self, next_node: "INode"):
-        ...
-
-
-class Node(INode):
-    def __init__(self, data: Any = None):
-        self.data = data
-    
-    def __repr__(self):
-        return f"Node({self.data})"
-
-    def __str__(self):
-        return f"{self.data}"
-    
-    def __eq__(self, other):
-        if isinstance(other, Node):
-            return self.data == other.data
-        else:
-            return self.data == other
-
-    def __gt__(self, other):
-        return self.data > other.data
-
-    def __ge__(self, other):
-        return self.data >= other.data
-    
-    def __lt__(self, other):
-        return self.data < other.data
-
-    def __le__(self, other):
-        return self.data <= other.data
-
-    @property
-    def next_node(self) -> "Node":
-        return self._next
-
-    def set_next_node(self, next_node: "Node"):
-        self._next = next_node
+from node import INode, Node
 
 
 class LinkedList(MutableSequence):
@@ -400,7 +350,7 @@ class LinkedList(MutableSequence):
         return " -> ".join(nodes)
 
 
-# for manual test purposes
+# for manual testing purposes
 if __name__ == "__main__":
     from random import randint
     l1 = LinkedList([0,1,2])

@@ -14,8 +14,10 @@ def bogo_sort(seq: Sequence) -> Sequence:
     return seq
 
 
+# for manual testing purposes
 if __name__ == "__main__":
     l1 = scrumble(LinkedList((i for i in range(10))))
     l2 = [randint(0,10) for i in range(10)]
-    t1 = tuple((i for i in range(10)))
+    l3 = LinkedList((randint(0, 10000) for i in range(10000)))
+    t1 = tuple((randint(0,10)*i for i in range(10)))
     d1 = {randint(0,10):randint(0,10) for i in range(10)}

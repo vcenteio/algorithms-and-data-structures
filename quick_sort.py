@@ -24,9 +24,11 @@ def quick_sort(seq: Sequence) -> Sequence:
         quick_sort(seq_type(greater_than_pivot))
     )
 
-# for manual test purposes
+
+# for manual testing purposes
 if __name__ == "__main__":
     l1 = scrumble(LinkedList((i for i in range(10))))
     l2 = [randint(0,10) for i in range(10)]
+    l3 = LinkedList((randint(0, 10000) for i in range(10000)))
     t1 = tuple((randint(0,10)*i for i in range(10)))
     d1 = {randint(0,10):randint(0,10) for i in range(10)}
