@@ -12,11 +12,23 @@ class HashMap:
         self._set_initial_map_size(map_size)
         self._hash_ceiling = map_size
         self._set_load_factor(load_factor)
-        self._initialize_list(_iter, map_size)
+        self._create_new_list(map_size, _iter)
     
-    def _initialize_list(self, _iter, map_size):
+    @property
+    def _size(self):
+        return len(self.keys())
+
+    @property
+    def _capacity(self):
+        return len(self._list) 
+
+    @property
+    def _load(self):
+        return self._size / self._capacity
+
+    def _create_new_list(self, map_size: int, _iter: Iterable = None):
         self._list = [None for i in range(map_size)]
-        if _iter == None:
+        if not _iter:
             return
         elif isinstance(_iter, Iterable):
             self.update(_iter)
@@ -45,49 +57,79 @@ class HashMap:
                 "(both ends not included)."
             )
         self._load_factor = load_factor
-
-    @property
-    def _size(self):
-        return len(self.keys())
-
-    @property
-    def _capacity(self):
-        return len(self._list) 
-
-    @property
-    def _load(self):
-        return self._size / self._capacity
     
+    def _calculate_new_map_size(self, number_of_new_items: int):
+        n = number_of_new_items
+        double_capacity = self._capacity * 2
+        return double_capacity if double_capacity > n else n + int(0.25 * n) 
+
+    def _resize_list(self, number_of_new_items: int):
+        print("Resize needed.")
+        new_map_size = self._calculate_new_map_size(number_of_new_items)
+        self._hash_ceiling = new_map_size
+        self._create_new_list(new_map_size, self.items())
+
+    def _is_resize_needed(self, number_of_new_items: int):
+        new_size = self._size + number_of_new_items
+        new_load = new_size / self._capacity
+        return new_load >= self._load_factor
+
+    def _manage_current_load(self, number_of_new_items: int = 1):
+        n = number_of_new_items
+        if self._is_resize_needed(n): self._resize_list(n)
+
+    @staticmethod 
+    def _is_valid_tuple(t: tuple):
+        return len(t) == 2
+
     def _add_from_tuple(self, t: tuple):
-        if len(t) == 2:
+        if self._is_valid_tuple(t):
+            self._manage_current_load()
             key, value = t
             self[key] = value
         else:
             raise ValueError("Tuple should have a length of 2.")
 
     def _add_from_dict(self, d: dict):
-        for key in d.keys():
+        self._manage_current_load(len(d))
+        for key in d:
             self[key] = d[key]
+        
+    @staticmethod
+    def _is_valid_list(l: list):
+        try:
+            [(key, value) for (key, value) in l]
+            return True
+        except (TypeError, ValueError):
+            return False
 
     def _add_from_list(self, l: list):
-        try:
+        if self._is_valid_list(l):
+            self._manage_current_load(len(l))
             for (key, value) in l:
                 self[key] = value
-        except TypeError:
-            raise TypeError("List items should be key-value pair iterables.")
-        except ValueError:
+        else:
             raise ValueError(
-                "List items should be iterables "\
-                "with a maximum length of 2."
+                "List items should be key-value pair iterables."
             )
 
     def update(self, _iterable: Union[tuple, dict, list]):
+        if not isinstance(_iterable, Iterable):
+            raise TypeError(
+                "Item should be a 2-item tuple, a list with 2-item "\
+                "tuples or a dict."
+            )
         if isinstance(_iterable, tuple):
             self._add_from_tuple(_iterable)
-        if isinstance(_iterable, dict):
+        elif isinstance(_iterable, dict):
             self._add_from_dict(_iterable)
-        if isinstance(_iterable, list):
+        elif isinstance(_iterable, list):
             self._add_from_list(_iterable)
+        else:
+            raise TypeError(
+                f"Iterables of type {get_class_name(_iterable)} "\
+                "are not supported."
+            )
     
     def setdefault(self, key, default=None):
         if key in self.keys():
@@ -161,7 +203,7 @@ class HashMap:
             raise TypeError(
                 "Cannot compare HashMap with object of another type "\
                 f"({get_class_name(other)})."
-                )
+            )
     
     def __eq__(self, other: "HashMap"):
         self._ensure_its_a_hashmap(other)
@@ -183,6 +225,9 @@ class HashMap:
 
 # for manual testing purposes
 if __name__ == "__main__":
+    from random import randint
     hm1 = HashMap((100, "a"))
     hm2 = HashMap([(i, chr(i)) for i in range(4)])
-    hm3 = HashMap({i:i*2 for i in range(10)})
+    hm3 = HashMap()
+    hm3.update({i:i*2 for i in range(8)})
+    hm3.update({randint(0,100):randint(0,100) for i in range(10000)})
