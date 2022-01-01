@@ -1,6 +1,7 @@
 ﻿from typing import Hashable, Union, Iterable
 from linked_list import LinkedList
 from tools import get_class_name
+from hashlib import sha1
 
 
 class HashMap:
@@ -178,10 +179,14 @@ class HashMap:
     def clear(self):
         del self._list
         self._create_new_list(self._INITIAL_MAP_SIZE)
-
+    
     @staticmethod
-    def _prehash(key):
-        return abs(hash(key)) 
+    def _salt(key):
+        encoded_key = key.encode() if isinstance(key, str) else bytes(key)
+        return sum(sha1(encoded_key, usedforsecurity=True).digest())
+
+    def _prehash(self, key):
+        return abs(hash(key) + self._salt(key)) 
 
     def _hash(self, key):
         # Although a tuple can be hashable if its values are hashable,
