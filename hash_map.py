@@ -5,18 +5,21 @@ from tools import get_class_name
 
 
 class HashMap:
+    _DEFAULT_MAP_SIZE = 10
+    _DEFAULT_LOAD_FACTOR = 0.75
+    
     def __init__(
             self, _iter: Iterable = None, map_size: int = 10,
             load_factor: float = 0.75
         ):
-        self._set_initial_map_size(map_size)
-        self._hash_ceiling = map_size
         self._set_load_factor(load_factor)
+        self._set_initial_map_size(map_size, len(_iter) if _iter else 0)
+        self._hash_ceiling = self._INITIAL_MAP_SIZE
         self._create_new_list(map_size, _iter)
     
     @property
     def _size(self):
-        return len(self.keys())
+        return sum([1 for item in self._list if item != None])
 
     @property
     def _capacity(self):
@@ -26,8 +29,40 @@ class HashMap:
     def _load(self):
         return self._size / self._capacity
 
+    def _set_load_factor(self, load_factor: float):
+        if not isinstance(load_factor, float):
+            raise TypeError(
+                f"Inappropriate type '{get_class_name(load_factor)}' "\
+                "for load factor. Should be 'float'."
+            )
+        if load_factor > 0.95 or load_factor < 0.05:
+            raise ValueError(
+                "Load factor value should be between 0.05 and 0.95 "\
+                "(both ends included)."
+            )
+        self._load_factor = load_factor
+    
+    def _get_size_with_load_margin(self, n):
+        margin_ratio = 1 - self._load_factor
+        return n + int(margin_ratio * n)
+
+    def _set_initial_map_size(self, map_size: int, number_of_new_items: int):
+        if not isinstance(map_size, int) or isinstance(map_size, bool):
+            raise TypeError(
+                f"Inappropriate type '{get_class_name(map_size)}' "\
+                "for map size. Should be 'int'."
+            )
+        if map_size < (dmz := self._DEFAULT_MAP_SIZE):
+            raise ValueError(f"Map size cannot be smaller than {dmz}.")
+        n = number_of_new_items
+        if map_size < n:
+            self._INITIAL_MAP_SIZE = self._get_size_with_load_margin(n)
+        else:
+            self._INITIAL_MAP_SIZE = self._get_size_with_load_margin(map_size)
+
     def _create_new_list(self, map_size: int, _iter: Iterable = None):
         self._list = [None for i in range(map_size)]
+        self._hash_ceiling = map_size
         if not _iter:
             return
         elif isinstance(_iter, Iterable):
@@ -35,36 +70,13 @@ class HashMap:
         else:
             raise TypeError("Non-iterable object passed at HashMap creation.")
     
-    def _set_initial_map_size(self, map_size: int):
-        if not isinstance(map_size, int):
-            raise TypeError(
-                f"Inappropriate type '{get_class_name(map_size)}' "\
-                "for map size. Should be 'int'."
-            )
-        if map_size < 1:
-            raise ValueError("Map size cannot be smaller than 1.")
-        self._INITIAL_MAP_SIZE = map_size
-
-    def _set_load_factor(self, load_factor: float):
-        if not isinstance(load_factor, float):
-            raise TypeError(
-                f"Inappropriate type '{get_class_name(load_factor)}' "\
-                "for load factor. Should be 'float'."
-            )
-        if load_factor >= 1 or load_factor <= 0:
-            raise ValueError(
-                "Load factor value should be between 0 and 1 "\
-                "(both ends not included)."
-            )
-        self._load_factor = load_factor
-    
     def _calculate_new_map_size(self, number_of_new_items: int):
         n = number_of_new_items
-        double_capacity = self._capacity * 2
-        return double_capacity if double_capacity > n else n + int(0.25 * n) 
+        doublecap = self._capacity * 2
+        size_with_margin = self._get_size_with_load_margin(n)
+        return doublecap if doublecap > size_with_margin else size_with_margin
 
     def _resize_list(self, number_of_new_items: int):
-        print("Resize needed.")
         new_map_size = self._calculate_new_map_size(number_of_new_items)
         self._hash_ceiling = new_map_size
         self._create_new_list(new_map_size, self.items())
@@ -139,13 +151,13 @@ class HashMap:
             return default
     
     def items(self):
-        return {bucket[0]:bucket[1] for bucket in self._list if bucket != None}
+        return {key:value for key, value in self}
 
     def keys(self):
-        return tuple((bucket[0] for bucket in self._list if bucket != None))
+        return tuple((key for key, _ in self))
 
     def values(self):
-        return tuple((bucket[1] for bucket in self._list if bucket != None))
+        return tuple((value for _, value in self))
     
     def get(self, key, default=None):
         try:
@@ -156,7 +168,7 @@ class HashMap:
     def pop(self, key, default=None):
         item_to_pop = self.get(key)
         if item_to_pop != None:
-            self[key] = None
+            del self[key] 
             return item_to_pop
         else:
             if default != None:
@@ -165,59 +177,116 @@ class HashMap:
                 raise KeyError("Mapping key not found.")
 
     def clear(self):
-        for k in self.keys():
-            self[k] = None
-
-    def __getitem__(self, key):
-        item = self._list[self._hash(key)]
-        if item == None:
-            raise KeyError("Mapping key not found.")
-        return item[1]
+        del self._list
+        self._create_new_list(self._INITIAL_MAP_SIZE)
 
     @staticmethod
     def _prehash(key):
         encoded_key = key.encode() if isinstance(key, str) else bytes(key)
-        return sum(sha1(encoded_key).digest())
+        return abs(sum(sha256(encoded_key).digest()))
 
     def _hash(self, key):
         return self._prehash(key) % self._hash_ceiling
-    
-    def __setitem__(self, key, value):
-        new_value = (key, value) if value is not None else None
-        self._list[self._hash(key)] = new_value 
-    
-    def __delitem__(self, key):
-        item_to_remove = self[key]
-        self[key] = None
-        del item_to_remove
-    
-    def __iter__(self):
-        return iter(self.items())
-    
-    def __contains__(self, key):
-        return key in self.keys()
+
+    def __getitem__(self, key):
+        bucket = self._list[self._hash(key)]
+        if bucket == None:
+            raise KeyError("Mapping key not found.")
+        if isinstance(bucket, tuple):
+            return bucket[1]
+        if isinstance(bucket, LinkedList):
+            for existing_key, value in bucket:
+                if existing_key == key:
+                    return value
+            raise KeyError("Mapping key not found.")
     
     @staticmethod
-    def _ensure_its_a_hashmap(other):
-        if not isinstance(other, HashMap):
-            raise TypeError(
-                "Cannot compare HashMap with object of another type "\
-                f"({get_class_name(other)})."
-            )
+    def _is_empty_bucket(bucket):
+        return bucket == None
     
+    @staticmethod
+    def _get_from_linked_list(key, linked_list):
+        index = 0
+        for existing_key, _ in linked_list:
+            if existing_key == key:
+                return index 
+            index += 1
+        return None
+    
+    def __setitem__(self, key, value):
+        hash_code = self._hash(key)
+        bucket = self._list[hash_code]
+        new_bucket = (key, value)
+        if self._is_empty_bucket(bucket):
+            self._list[hash_code] = new_bucket 
+        elif isinstance(bucket, tuple):
+            if bucket[0] == key:
+                self._list[hash_code] = new_bucket
+            else:
+                new_bucket = (key, value)
+                self._list[hash_code] = LinkedList([bucket, new_bucket])
+        elif isinstance(bucket, LinkedList):
+            index = self._get_from_linked_list(key, bucket)
+            bucket: LinkedList
+            if index != None:
+                bucket[index] = new_bucket
+            else:
+                bucket.append(new_bucket)
+    
+    def __delitem__(self, key):
+        hash_code = self._hash(key)
+        bucket = self._list[hash_code]
+        if bucket == None:
+            raise KeyError("Mapping key not found.")
+        if isinstance(bucket, tuple):
+            item_to_remove, self._list[hash_code] = bucket, None
+            del item_to_remove
+        elif isinstance(bucket, LinkedList):
+            bucket: LinkedList
+            index = self._get_from_linked_list(key, bucket)
+            if index == None:
+                raise KeyError("Mapping key not found.")
+            else:
+                item_to_remove = bucket.pop(index)
+                del item_to_remove
+    
+    def __iter__(self):
+        for bucket in self._list:
+            if isinstance(bucket, LinkedList):
+                for node in bucket:
+                    yield node
+            elif isinstance(bucket, tuple):
+                yield bucket
+    
+    def __contains__(self, key):
+        for existing_key, _ in self:
+            if existing_key == key:
+                return True
+        return False
+    
+    def _ensure_its_a_hashmap(func):
+        def wrapper(self, other):
+            if not isinstance(other, HashMap):
+                raise TypeError(
+                    "Cannot compare HashMap with object of another type "\
+                    f"({get_class_name(other)})."
+                )
+            return func(self, other)
+        return wrapper
+    
+    @_ensure_its_a_hashmap
     def __eq__(self, other: "HashMap"):
-        self._ensure_its_a_hashmap(other)
         return self.items() == other.items()
     
+    @_ensure_its_a_hashmap
     def __ne__(self, other: "HashMap"):
-        self._ensure_its_a_hashmap(other)
         return self.items() != other.items()
     
     def __len__(self):
-        return self._size
+        return sum((1 for item in self))
     
     def __repr__(self):
-        return f"<LinkedHashMap: {self._list}>"
+        return f"<HashMap: {self._list}>"
 
     def __str__(self):
         return str(self.items())
@@ -230,4 +299,6 @@ if __name__ == "__main__":
     hm2 = HashMap([(i, chr(i)) for i in range(4)])
     hm3 = HashMap()
     hm3.update({i:i*2 for i in range(8)})
-    hm3.update({randint(0,100):randint(0,100) for i in range(10000)})
+    hm3.update({randint(0,100):randint(0,100) for i in range(100)})
+    hm4 = HashMap({i:i*2 for i in range(1000)})
+    hm4.update({i:i*2 for i in range(1000, 2000)})

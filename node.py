@@ -25,6 +25,12 @@ class Node(INode):
             )
         self.data = data
     
+    def __getitem__(self, key: int):
+        return self.data[key]
+    
+    def __iter__(self):
+        return iter(self.data)
+
     def __repr__(self):
         return f"Node({self.data})"
 
