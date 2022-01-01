@@ -1,6 +1,5 @@
-﻿from typing import Union, Iterable
+﻿from typing import Hashable, Union, Iterable
 from linked_list import LinkedList
-from hashlib import *
 from tools import get_class_name
 
 
@@ -182,10 +181,13 @@ class HashMap:
 
     @staticmethod
     def _prehash(key):
-        encoded_key = key.encode() if isinstance(key, str) else bytes(key)
-        return abs(sum(sha256(encoded_key).digest()))
+        return abs(hash(key)) 
 
     def _hash(self, key):
+        if not isinstance(key, Hashable):
+            raise TypeError(f"Key be {get_class_name(key)} type. Must be hashable.")
+        if key is None or isinstance(key, tuple) :
+            raise ValueError(f"Key cannot be {get_class_name(key)}.")
         return self._prehash(key) % self._hash_ceiling
 
     def __getitem__(self, key):
@@ -302,3 +304,4 @@ if __name__ == "__main__":
     hm3.update({randint(0,100):randint(0,100) for i in range(100)})
     hm4 = HashMap({i:i*2 for i in range(1000)})
     hm4.update({i:i*2 for i in range(1000, 2000)})
+    hm5 = HashMap({i:i*2 for i in range(100000)})
