@@ -184,9 +184,17 @@ class HashMap:
         return abs(hash(key)) 
 
     def _hash(self, key):
-        if not isinstance(key, Hashable):
-            raise TypeError(f"Key be {get_class_name(key)} type. Must be hashable.")
-        if key is None or isinstance(key, tuple) :
+        # Although a tuple can be hashable if its values are hashable,
+        # in this specification I want to prevent users from using
+        # tuples for the keys. It may be reconsidered in the future.
+        if not isinstance(key, Hashable) or isinstance(key, tuple):
+            raise TypeError(
+                f"Key be {get_class_name(key)} type. "\
+                "Must be hashable and cannot be a tuple or NoneType."
+            )
+        # Since None is always hashable, for the sake of correctness,
+        # I consider it a ValueError.
+        if key is None:
             raise ValueError(f"Key cannot be {get_class_name(key)}.")
         return self._prehash(key) % self._hash_ceiling
 
@@ -195,7 +203,9 @@ class HashMap:
         if bucket == None:
             raise KeyError("Mapping key not found.")
         if isinstance(bucket, tuple):
-            return bucket[1]
+            if bucket[0] == key:
+                return bucket[1]
+            raise KeyError("Mapping key not found.")
         if isinstance(bucket, LinkedList):
             for existing_key, value in bucket:
                 if existing_key == key:
@@ -302,6 +312,6 @@ if __name__ == "__main__":
     hm3 = HashMap()
     hm3.update({i:i*2 for i in range(8)})
     hm3.update({randint(0,100):randint(0,100) for i in range(100)})
-    hm4 = HashMap({i:i*2 for i in range(1000)})
+    hm4 = HashMap({randint(0, 500):i*2 for i in range(1000)})
     hm4.update({i:i*2 for i in range(1000, 2000)})
     hm5 = HashMap({i:i*2 for i in range(100000)})
