@@ -1,25 +1,63 @@
-﻿from typing import Any
+﻿import sys
+from typing import Any, Hashable, Iterable, Sequence
 
 
 class TreeNode:
+    _level: int = 0
+    _parent: "TreeNode" = None
+
     def __init__(
         self, data, parent: "TreeNode" = None,
         _children: list["TreeNode"] = None
     ):
-        self.data = data
-        self._parent: TreeNode = parent
-        self._children: list = _children if _children else []
-        self.level: int = 0 if parent == None else parent.level+1
+        self.data: Any = data
+        self._children: list["TreeNode"] = []
+        self.set_parent(parent)
+        self.set_children(_children)
     
-    def add_child(self, new_child):
-        new_child.level = self.level + 1
+    def add_child(self, new_child: "TreeNode"):
         new_child._parent = self
+        new_child.set_level()
         self._children.append(new_child)
     
     def remove_child(self, child):
         children_data = [child.data for child in self._children]
         child_index = children_data.index(child)
         self._children.pop(child_index)
+    
+    def set_parent(self, parent: "TreeNode"):
+        if isinstance(parent, TreeNode):
+            parent.add_child(self)
+        elif parent == None:
+            self._parent == None
+        else:
+            raise TypeError("Inappropriate type for parent.")
+    
+    @property
+    def parent(self):
+        return self._parent
+
+    def set_level(self):
+        self._level = self._parent.level+1 if self._parent else 0
+        for descendant in self.descendants:
+            descendant.set_level()
+
+    def set_children(self, children: Sequence["TreeNode"]):
+        if not children:
+            self._children = []
+            return
+        for child in children:
+            self.add_child(child)
+            for descendant in child.descendants:
+                descendant.set_level()
+    
+    @property
+    def children(self):
+        return tuple(self._children)
+
+    @property
+    def level(self):
+        return self._level
     
     def is_leaf_node(self) -> bool:
         return not self._children
@@ -28,15 +66,20 @@ class TreeNode:
         return bool(self._children)
 
     @property
-    def descendants(self):
+    def all_nodes(self) -> list["TreeNode"]:
         if self.is_leaf_node():
             return [self]
         else:
             _l = []
             for child in self._children:
-                 _l.extend(child.descendants)
+                 _l.extend(child.all_nodes)
             _l.insert(0, self)
-            return _l
+            return tuple(_l)
+
+    @property
+    def descendants(self) -> list["TreeNode"]:
+        index_excluding_self = 1
+        return self.all_nodes[index_excluding_self:]
     
     def __repr__(self):
         return str(self.data)
@@ -50,13 +93,19 @@ class TreeNode:
     def __contains__(self, item):
         children_data = [child.data for child in self]
         return item in children_data
+    
+    def __hash__(self):
+        return hash(self.data)
+    
+    def __eq__(self, other: "TreeNode"):
+        return hash(self) == hash(other) if isinstance(other, Hashable) else False
 
 
 class Tree:
     def __init__(self, root: TreeNode):
         self.root = root
         if self.root:
-            self.root.level = 0    
+            self.root._level = 0    
     
     @staticmethod
     def _is_node(node) -> bool:
@@ -83,10 +132,10 @@ class Tree:
         parent.remove_child(node)
 
     def __iter__(self):
-        return iter(self.root.descendants)
+        return iter(self.root.all_nodes)
     
     def __contains__(self, item):
-        return item.data in self.root.descendants
+        return item.data in self.root.all_nodes
     
     def __repr__(self):
         nodes_str = [child.level * '__' + str(child) for child in self]
@@ -100,9 +149,9 @@ if __name__ == "__main__":
     tn1ch0 = TreeNode("Wolf")
     tn1ch1 = TreeNode("Dog")
 
-    genus = ["Canines", "Bovines", "Felines", "Birds"]
-    for species in genus:
-        tn1.add_child(TreeNode(species))
+    genera = ["Canines", "Bovines", "Felines", "Birds"]
+    for genus in genera:
+        tn1.add_child(TreeNode(genus))
 
     t1 = Tree(tn1)
     
