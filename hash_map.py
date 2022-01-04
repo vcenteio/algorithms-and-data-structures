@@ -35,9 +35,9 @@ class HashMap:
                 f"Inappropriate type '{get_class_name(load_factor)}' "\
                 "for load factor. Should be 'float'."
             )
-        if load_factor > 0.95 or load_factor < 0.05:
+        if load_factor > 0.95 or load_factor < 0.75:
             raise ValueError(
-                "Load factor value should be between 0.05 and 0.95 "\
+                "Load factor value should be between 0.75 and 0.95 "\
                 "(both ends included)."
             )
         self._load_factor = load_factor
@@ -61,7 +61,7 @@ class HashMap:
             self._INITIAL_MAP_SIZE = self._get_size_with_load_margin(map_size)
 
     def _create_new_list(self, map_size: int, _iter: Iterable = None):
-        self._list = [None for i in range(map_size)]
+        self._list = [None for _ in range(map_size)]
         self._hash_ceiling = map_size
         if not _iter:
             return
@@ -300,7 +300,7 @@ class HashMap:
         return self.items() != other.items()
     
     def __len__(self):
-        return sum((1 for item in self))
+        return sum((1 for _ in self))
     
     def __repr__(self):
         return f"<HashMap: {self._list}>"
