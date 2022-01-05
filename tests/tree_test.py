@@ -9,11 +9,11 @@ def n0():
     return TreeNode("Animal")
 
 @pytest.fixture
-def n1(n0):
-    node = n0
+def n1():
+    node = TreeNode("Animal")
     genera = ["Canines", "Bovines", "Felines", "Birds"]
     for genus in genera:
-        n0.add_child(TreeNode(genus))
+        node.add_child(TreeNode(genus))
     return node
 
 @pytest.fixture
@@ -120,17 +120,117 @@ def test_node_instantiation_with_parent_and_children_with_subchildren(n3: TreeNo
         for subchild in child.children:
             assert subchild._parent == child
     
+def test_node_add_child_correct_type(n0: TreeNode):
+    n0.add_child(child_a := TreeNode("aa"))
+    n0.add_child(child_b := TreeNode("ab"))
+    assert n0._children == [child_a, child_b]
+    assert child_a._parent == child_b._parent == n0
+    assert child_a.level == child_b.level == 1
 
-def test_node_add_child():
-    node = TreeNode("a")
-    node.add_child(TreeNode("aa"))
-    node.add_child(TreeNode("ab"))
-    assert node._children == [TreeNode("aa"), TreeNode("ab")]
+def test_node_add_child_wrong_type(n0: TreeNode):
+    with pytest.raises(TypeError):
+        n0.add_child("str")
+
+def test_node_pop_child_correct_value(n1: TreeNode):
+    genera = ["Canines", "Bovines", "Felines", "Birds"]
+    removed_child = n1.pop_child("Canines")
+    assert removed_child.data == "Canines"
+    assert n1._children == genera[1:]
+    assert removed_child._parent == None
+    removed_child = n1.pop_child("Felines")
+    assert removed_child.data == "Felines"
+    assert n1._children == genera[1::2]
+    assert removed_child._parent == None
+
+def test_node_pop_child_wrong_value(n1: TreeNode):
+    with pytest.raises(ValueError):
+        n1.pop_child("Dinosaurs")
+
+def test_node_set_parent_correct_type(n1: TreeNode):
+    n1.set_parent(parent := TreeNode("Living Organism"))
+    assert n1 in parent
+    assert n1._parent == parent
+    assert n1.level == parent.level+1 == n1._parent.level+1
+    for child in n1.children:
+        assert child.level == n1.level+1 == n1.parent.level+2 
+
+    n1.set_parent(None)
+    assert n1._parent == None
+    assert n1.level == 0
+    for child in n1.children:
+        assert child.level == 1
+
+def test_node_set_parent_wrong_type(n1: TreeNode):
+    with pytest.raises(TypeError):
+        n1.set_parent("str")
+    with pytest.raises(TypeError):
+        n1.set_parent(1)
+    with pytest.raises(TypeError):
+        n1.set_parent(b"bytes123")
+    with pytest.raises(TypeError):
+        n1.set_parent([1,2,3])
+
+def test_node_set_level(n3: TreeNode):
+    assert n3.level == 1 == n3.parent.level+1
+    n3._parent = None
+    n3.set_level()
+    assert n3.level == 0
+    for descendant in n3.descendants:
+        assert descendant.level == descendant.parent.level+1
+    
+def test_node_set_children_with_empty_list(n0: TreeNode, n1: TreeNode):
+    n0.set_children([])
+    assert n0._children == []
+    
+    n1_children_copy = n1.children[:]
+    n1.set_children([])
+    for child in n1_children_copy:
+        assert child.level == 0
+        assert child.parent == None
+    assert n1.children == () and n1._children == []
+
+def test_node_set_children_with_non_empty_list(n0: TreeNode, n1: TreeNode):
+    genera = ["Fishes", "Reptiles", "Horses"]
+    children = list(map(TreeNode, genera))
+    n0.set_children(children)
+    for child in n0.children:
+        assert child in children
+    for child in children:
+        assert child in n0
+    assert len(n0.children) == len(children)
+
+    n1_children_copy = n1.children[:]
+    n1.set_children(children)
+    for child in n1_children_copy:
+        assert child.level == 0
+        assert child.parent == None
+        assert child not in n1
+    for child in n1.children:
+        assert child in children
+    for child in children:
+        assert child in n1
+    assert len(n1.children) == len(children)
+
+def test_node_is_leaf_node(n0: TreeNode, n1: TreeNode, n3: TreeNode):
+    assert n0.is_leaf_node()
+    assert not n1.is_leaf_node()
+    for child in n1.children:
+        assert child.is_leaf_node()
+    for child in n3.children:
+        assert not child.is_leaf_node()
+
+def test_node_is_internal_node(n0: TreeNode, n1: TreeNode, n3: TreeNode):
+    assert not n0.is_internal_node()
+    assert n1.is_internal_node()
+    for child in n1.children:
+        assert not child.is_internal_node()
+    for child in n3.children:
+        assert child.is_internal_node()
 
 def test_node_descendants_list(n1: TreeNode):
     genera = ["Canines", "Bovines", "Felines", "Birds"]
-    _d = tuple((TreeNode(genus) for genus in genera))
-    assert n1.descendants == _d
+    d = tuple((TreeNode(genus) for genus in genera))
+    assert n1.descendants == d
 
 def test_node_descendants_level(n1: TreeNode):
     for descendant in n1.descendants:

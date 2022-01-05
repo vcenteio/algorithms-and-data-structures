@@ -1,5 +1,4 @@
-﻿import sys
-from typing import Any, Hashable, Iterable, Sequence
+﻿from typing import Any, Hashable, Sequence, Tuple
 
 
 class TreeNode:
@@ -16,35 +15,48 @@ class TreeNode:
         self.set_children(_children)
     
     def add_child(self, new_child: "TreeNode"):
+        if not isinstance(new_child, TreeNode):
+            raise TypeError("Child must be of TreeNode type.")
         new_child._parent = self
         new_child.set_level()
         self._children.append(new_child)
     
-    def remove_child(self, child):
-        children_data = [child.data for child in self._children]
-        child_index = children_data.index(child)
-        self._children.pop(child_index)
+    def pop_child(self, child_data: Any):
+        index = 0
+        for child in self._children:
+            if child.data == child_data:
+                child_to_remove = self._children.pop(index)
+                child_to_remove.set_parent(None)
+                return child_to_remove
+            index += 1
+        raise ValueError(f"No child node with data '{child_data}'")
     
     def set_parent(self, parent: "TreeNode"):
         if isinstance(parent, TreeNode):
             parent.add_child(self)
         elif parent == None:
-            self._parent == None
+            self._parent = None
+            self.set_level()
         else:
             raise TypeError("Inappropriate type for parent.")
     
     @property
-    def parent(self):
+    def parent(self) -> "TreeNode":
         return self._parent
 
     def set_level(self):
         self._level = self._parent.level+1 if self._parent else 0
         for descendant in self.descendants:
             descendant.set_level()
+    
+    def _release_current_children(self):
+        for child in self._children:
+            child.set_parent(None)
+        self._children = []
 
     def set_children(self, children: Sequence["TreeNode"]):
+        self._release_current_children()
         if not children:
-            self._children = []
             return
         for child in children:
             self.add_child(child)
@@ -66,18 +78,18 @@ class TreeNode:
         return bool(self._children)
 
     @property
-    def all_nodes(self) -> list["TreeNode"]:
+    def all_nodes(self) -> Tuple["TreeNode"]:
         if self.is_leaf_node():
             return [self]
         else:
-            _l = []
+            l = []
             for child in self._children:
-                 _l.extend(child.all_nodes)
-            _l.insert(0, self)
-            return tuple(_l)
+                 l.extend(child.all_nodes)
+            l.insert(0, self)
+            return tuple(l)
 
     @property
-    def descendants(self) -> list["TreeNode"]:
+    def descendants(self) -> Tuple["TreeNode"]:
         index_excluding_self = 1
         return self.all_nodes[index_excluding_self:]
     
@@ -91,8 +103,9 @@ class TreeNode:
         return iter(self._children)
 
     def __contains__(self, item):
-        children_data = [child.data for child in self]
-        return item in children_data
+        if not isinstance(item, TreeNode):
+            raise TypeError("Item is not of TreeNode type.")
+        return item in self._children
     
     def __hash__(self):
         return hash(self.data)
