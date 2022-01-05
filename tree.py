@@ -2,7 +2,6 @@
 
 
 class TreeNode:
-    _level: int = 0
     _parent: "TreeNode" = None
 
     def __init__(
@@ -18,7 +17,6 @@ class TreeNode:
         if not isinstance(new_child, TreeNode):
             raise TypeError("Child must be of TreeNode type.")
         new_child._parent = self
-        new_child.set_level()
         self._children.append(new_child)
     
     def pop_child(self, child_data: Any):
@@ -36,7 +34,6 @@ class TreeNode:
             parent.add_child(self)
         elif parent == None:
             self._parent = None
-            self.set_level()
         else:
             raise TypeError("Inappropriate type for parent.")
     
@@ -44,10 +41,36 @@ class TreeNode:
     def parent(self) -> "TreeNode":
         return self._parent
 
-    def set_level(self):
-        self._level = self._parent.level+1 if self._parent else 0
-        for descendant in self.descendants:
-            descendant.set_level()
+    @property
+    def ancestors(self) -> Tuple["TreeNode"]:
+        current = self.parent
+        ancestors = []
+        while current:
+            ancestors.append(current)
+            current = current.parent
+        return tuple(ancestors)
+
+    @property
+    def depth(self) -> int:
+        current = self.parent
+        depth = 0
+        while current:
+            current = current.parent
+            depth += 1
+        return depth 
+    
+    @property
+    def siblings(self) -> Tuple["TreeNode"]:
+        if not self.parent:
+            return ()
+        return tuple(
+                (child for child in self.parent.children if child != self)
+            )
+    
+    @property
+    def neighbours(self) -> Tuple["TreeNode"]:
+        parent_and_children = (self.parent,) + self.children
+        return parent_and_children if self.parent else self.children
     
     def _release_current_children(self):
         for child in self._children:
@@ -60,16 +83,20 @@ class TreeNode:
             return
         for child in children:
             self.add_child(child)
-            for descendant in child.descendants:
-                descendant.set_level()
     
     @property
     def children(self):
-        return tuple(self._children)
+        return tuple(self._children) if self._children else ()
 
     @property
     def level(self):
-        return self._level
+        return self.depth + 1
+    
+    @property
+    def height(self):
+        if not self.children:
+            return 0
+        return 1 + max([child.height for child in self.children])
     
     def is_leaf_node(self) -> bool:
         return not self._children
@@ -117,8 +144,6 @@ class TreeNode:
 class Tree:
     def __init__(self, root: TreeNode):
         self.root = root
-        if self.root:
-            self.root._level = 0    
     
     @staticmethod
     def _is_node(node) -> bool:
