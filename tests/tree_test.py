@@ -1,7 +1,5 @@
-﻿import sys
-sys.path.append("..")
+﻿from tree import Tree, TreeNode
 
-from tree import TreeNode, Tree
 import pytest
 
 @pytest.fixture
@@ -371,7 +369,6 @@ def test_node_leaves(n0: TreeNode, n1: TreeNode, n2: TreeNode, n3: TreeNode):
     birds = list(map(TreeNode, ["Hawk", "Dove"]))
     expected_n3_leaves = tuple([*canines, *bovines, *felines, *birds])
     assert n3.leaves == expected_n3_leaves
-
 
 def test_node_breadth(n0: TreeNode, n1: TreeNode, n2:TreeNode, n3: TreeNode):
     assert n0.breadth == 0

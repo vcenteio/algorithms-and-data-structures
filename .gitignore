@@ -1,5 +1,3 @@
-﻿__pycache__/
-.vscode/
+﻿.vscode/
+__pycache__/
 .pytest_cache/
-tests/__*
-tests/.pytest_cache
