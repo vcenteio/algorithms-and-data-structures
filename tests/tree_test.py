@@ -146,6 +146,9 @@ def test_node_pop_child_wrong_value(n1: TreeNode):
         n1.pop_child("Dinosaurs")
 
 def test_node_set_parent_correct_type(n1: TreeNode):
+    with pytest.raises(ValueError):
+        n1.set_parent(n1)
+
     n1.set_parent(parent := TreeNode("Living Organism"))
     assert n1 in parent
     assert n1._parent == parent
@@ -321,6 +324,60 @@ def test_node_neighbours(n0: TreeNode, n1: TreeNode, n2: TreeNode, n3: TreeNode)
     assert n3.neighbours == (n3.parent,) + n3.children
     for descendant in n3.descendants:
         assert descendant not in n3.neighbours if descendant.level >= n3.level+2 else descendant in n3.neighbours
+
+def test_node_degree(n0: TreeNode, n1: TreeNode, n2: TreeNode, n3: TreeNode):
+    assert n0.degree == 0 == len(n0.children)
+    assert n1.degree == n2.degree == 4
+    assert n2.parent.degree == 1
+    n2.parent.add_child(TreeNode("new child"))
+    assert n2.parent.degree == 2
+    for child in n3.children:
+        assert child.degree == 2
+    for node in (n0, n1, n2, n3):
+        for subnode in node.all_nodes:
+            assert subnode.degree == len(subnode.children)
+
+def test_node_distance_from_descendant_wrong_type(n0: TreeNode):
+    with pytest.raises(TypeError):
+        n0.distance_from_descendant("str")
+    with pytest.raises(TypeError):
+        n0.distance_from_descendant(1)
+
+def test_node_distance_from_descendant_correct_type(n0: TreeNode, n1: TreeNode, n2: TreeNode, n3: TreeNode):
+    with pytest.raises(ValueError):
+        n0.distance_from_descendant(n1)
+    with pytest.raises(ValueError):
+        n1.distance_from_descendant(n1)
+    
+    for child in n1.children:
+        assert n1.distance_from_descendant(child) == 1
+    for child in n2.children:
+        for subchild in child:
+            assert n2.distance_from_descendant(subchild) == 2 == n2.distance_from_descendant(child)+1
+    
+    for node in n3.parent.descendants:
+        assert n3.parent.distance_from_descendant(node) == node.level - n3.parent.level
+
+def test_node_leaves(n0: TreeNode, n1: TreeNode, n2: TreeNode, n3: TreeNode):
+    assert n0.leaves == ()
+
+    expected_n1_leaves = tuple(map(TreeNode, ["Canines", "Bovines", "Felines", "Birds"]))
+    assert n1.leaves == expected_n1_leaves
+    assert n2.leaves == n1.leaves
+
+    canines = list(map(TreeNode, ["Dog", "Wolf"]))
+    bovines = list(map(TreeNode, ["Cattle", "Bison"]))
+    felines = list(map(TreeNode, ["Cat", "Tiger"]))
+    birds = list(map(TreeNode, ["Hawk", "Dove"]))
+    expected_n3_leaves = tuple([*canines, *bovines, *felines, *birds])
+    assert n3.leaves == expected_n3_leaves
+
+
+def test_node_breadth(n0: TreeNode, n1: TreeNode, n2:TreeNode, n3: TreeNode):
+    assert n0.breadth == 0
+    assert n1.breadth == 4 == n2.breadth
+    assert n3.breadth == 8
+
 
 # Tree tests.
 def test_tree_root_level(t1: Tree):

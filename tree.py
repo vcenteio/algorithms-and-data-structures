@@ -1,4 +1,5 @@
 ﻿from typing import Any, Hashable, Sequence, Tuple
+from tools import get_class_name
 
 
 class TreeNode:
@@ -31,6 +32,8 @@ class TreeNode:
     
     def set_parent(self, parent: "TreeNode"):
         if isinstance(parent, TreeNode):
+            if parent == self:
+                raise ValueError("A node cannot be its own parent.")
             parent.add_child(self)
         elif parent == None:
             self._parent = None
@@ -87,6 +90,10 @@ class TreeNode:
     @property
     def children(self):
         return tuple(self._children) if self._children else ()
+    
+    @property
+    def degree(self):
+        return len(self.children)
 
     @property
     def level(self):
@@ -98,16 +105,32 @@ class TreeNode:
             return 0
         return 1 + max([child.height for child in self.children])
     
+    def distance_from_descendant(self, node: "TreeNode") -> int:
+        if not isinstance(node, TreeNode):
+            raise TypeError(f"Node must be of type TreeNode.")
+        for descendant in self.descendants:
+            if node == descendant:
+                return descendant.level - self.level
+        raise ValueError(f"{node} is not a descendant of {self}.")
+    
     def is_leaf_node(self) -> bool:
         return not self._children
     
     def is_internal_node(self) -> bool:
         return bool(self._children)
+    
+    @property
+    def leaves(self) -> tuple["TreeNode"]:
+        return tuple((node for node in self.descendants if node.is_leaf_node()))
+
+    @property
+    def breadth(self) -> int:
+        return len(self.leaves)
 
     @property
     def all_nodes(self) -> Tuple["TreeNode"]:
         if self.is_leaf_node():
-            return [self]
+            return (self,)
         else:
             l = []
             for child in self._children:
