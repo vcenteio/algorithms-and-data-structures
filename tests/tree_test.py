@@ -1,4 +1,5 @@
-﻿from tree import Tree, TreeNode
+﻿from typing import Type
+from tree import Tree, TreeNode
 import pytest
 
 @pytest.fixture
@@ -125,18 +126,27 @@ def test_node_add_child_wrong_type(n0: TreeNode):
 
 def test_node_pop_child_correct_value(n1: TreeNode):
     genera = ["Canines", "Bovines", "Felines", "Birds"]
-    removed_child = n1.pop_child("Canines")
-    assert removed_child.data == "Canines"
-    assert n1._children == genera[1:]
+    node1 = TreeNode("Canines")
+    removed_child = n1.pop_child(node1)
+    assert removed_child.data == node1
+    assert n1._children == list(map(TreeNode, genera[1:]))
     assert removed_child._parent == None
-    removed_child = n1.pop_child("Felines")
-    assert removed_child.data == "Felines"
-    assert n1._children == genera[1::2]
+
+    node2 = TreeNode("Felines")
+    removed_child = n1.pop_child(node2)
+    assert removed_child.data == node2
+    assert n1._children == list(map(TreeNode, genera[1::2]))
     assert removed_child._parent == None
+
+def test_node_pop_child_wrong_type(n1: TreeNode):
+    with pytest.raises(TypeError):
+        n1.pop_child("Dinosaurs")
+    with pytest.raises(TypeError):
+        n1.pop_child(1)
 
 def test_node_pop_child_wrong_value(n1: TreeNode):
     with pytest.raises(ValueError):
-        n1.pop_child("Dinosaurs")
+        n1.pop_child(TreeNode("Dinosaurs"))
 
 def test_node_set_parent_correct_type(n1: TreeNode):
     with pytest.raises(ValueError):
@@ -276,17 +286,17 @@ def test_node_height(n0: TreeNode, n1: TreeNode, n2: TreeNode, n3: TreeNode):
         if not descendant.height:
             assert descendant.is_leaf_node()
     
-    n3.children[0].pop_child("Wolf")
-    n3.children[0].pop_child("Dog")
+    n3.children[0].pop_child(TreeNode("Wolf"))
+    n3.children[0].pop_child(TreeNode("Dog"))
     assert n3.parent.height == 3
     assert n3.height == 2
-    n3.children[2].pop_child("Cat")
-    n3.children[2].pop_child("Tiger")
+    n3.children[2].pop_child(TreeNode("Cat"))
+    n3.children[2].pop_child(TreeNode("Tiger"))
     assert n3.parent.height == 3
     assert n3.height == 2
-    n3.pop_child("Canines")
-    n3.pop_child("Felines")
-    n3.pop_child("Bovines")
+    n3.pop_child(TreeNode("Canines"))
+    n3.pop_child(TreeNode("Felines"))
+    n3.pop_child(TreeNode("Bovines"))
     assert n3.parent.height == 3
     assert n3.height == 2
 
@@ -335,24 +345,24 @@ def test_node_degree(n0: TreeNode, n1: TreeNode, n2: TreeNode, n3: TreeNode):
 
 def test_node_distance_from_descendant_wrong_type(n0: TreeNode):
     with pytest.raises(TypeError):
-        n0.distance_from_descendant("str")
+        n0.get_distance_from_descendant("str")
     with pytest.raises(TypeError):
-        n0.distance_from_descendant(1)
+        n0.get_distance_from_descendant(1)
 
 def test_node_distance_from_descendant_correct_type(n0: TreeNode, n1: TreeNode, n2: TreeNode, n3: TreeNode):
     with pytest.raises(ValueError):
-        n0.distance_from_descendant(n1)
+        n0.get_distance_from_descendant(n1)
     with pytest.raises(ValueError):
-        n1.distance_from_descendant(n1)
+        n1.get_distance_from_descendant(n1)
     
     for child in n1.children:
-        assert n1.distance_from_descendant(child) == 1
+        assert n1.get_distance_from_descendant(child) == 1
     for child in n2.children:
         for subchild in child:
-            assert n2.distance_from_descendant(subchild) == 2 == n2.distance_from_descendant(child)+1
+            assert n2.get_distance_from_descendant(subchild) == 2 == n2.get_distance_from_descendant(child)+1
     
     for node in n3.parent.descendants:
-        assert n3.parent.distance_from_descendant(node) == node.level - n3.parent.level
+        assert n3.parent.get_distance_from_descendant(node) == node.level - n3.parent.level
 
 def test_node_leaves(n0: TreeNode, n1: TreeNode, n2: TreeNode, n3: TreeNode):
     assert n0.leaves == (TreeNode("Animal"),)
@@ -374,6 +384,8 @@ def test_node_breadth(n0: TreeNode, n1: TreeNode, n2:TreeNode, n3: TreeNode):
     assert n3.breadth == 8
 
 
+# Tree tests.
+
 @pytest.fixture
 def t0(n0):
     return Tree(n0)
@@ -390,7 +402,31 @@ def t2(n2):
 def t3(n3):
     return Tree(n3)
 
-# Tree tests.
+def test_tree_set_root_wrong_type():
+    with pytest.raises(TypeError):
+        Tree("str")
+    with pytest.raises(TypeError):
+        Tree(123)
+    with pytest.raises(TypeError):
+        Tree([])
+
+def test_tree_set_root_wrong_type(t2: Tree):
+    root_parent = TreeNode("Animal")
+    root = TreeNode("Mammal", root_parent)
+    _tree = Tree(root)
+    assert _tree.root == root
+    assert _tree.root.parent == root.parent == None != root_parent
+
+    root = TreeNode("Animal")
+    new_root = TreeNode("Mammal")
+    assert t2.root == root
+    t2.set_root(new_root)
+    assert t2.root == new_root != root
+    assert root not in t2
+
+def test_tree_root_level(t1: Tree, t2: Tree):
+    assert t1.root.level == 1
+    assert t2.root.level == 1
 
 def test_tree_contains_wrong_type(t1: Tree):
     with pytest.raises(TypeError):
@@ -410,10 +446,6 @@ def test_tree_contains_correct_type(t1: Tree, t2):
     assert node2 not in t1
     assert node2 not in t2
 
-def test_tree_root_level(t1: Tree, t2: Tree):
-    assert t1.root.level == 1
-    assert t2.root.level == 1
-
 def test_tree_degree(t0: Tree, t1: Tree, t2: Tree, t3: Tree):
     assert t0.degree == 0
     assert t1.degree == t2.degree == t3.degree == 4
@@ -428,30 +460,30 @@ def test_tree_degree(t0: Tree, t1: Tree, t2: Tree, t3: Tree):
     t3.root.children[3].add_child(TreeNode("Virginia Rail"))
     assert t3.degree == 6
 
-def test_tree_least_common_ancestor_wrong_types(t3: Tree):
+def test_tree_lowest_common_ancestor_wrong_types(t3: Tree):
     with pytest.raises(TypeError):
-        assert t3.get_least_common_ancestor("123", 2)
+        assert t3.get_lowest_common_ancestor("123", 2)
 
-def test_tree_least_common_ancestor_nodes_of_the_same_tree(t3: Tree):
+def test_tree_lowest_common_ancestor_nodes_of_the_same_tree(t3: Tree):
     node1 = t3.find(TreeNode("Wolf"))
     node2 = t3.find(TreeNode("Dog"))
-    assert t3.get_least_common_ancestor(node1, node2) == TreeNode("Canines")
+    assert t3.get_lowest_common_ancestor(node1, node2) == TreeNode("Canines")
     node2 = t3.find(TreeNode("Canines"))
-    assert t3.get_least_common_ancestor(node1, node2) == TreeNode("Canines")
+    assert t3.get_lowest_common_ancestor(node1, node2) == TreeNode("Canines")
     node2 = t3.find(TreeNode("Felines"))
-    assert t3.get_least_common_ancestor(node1, node2) == TreeNode("Animal")
+    assert t3.get_lowest_common_ancestor(node1, node2) == TreeNode("Animal")
     
     t3.root.children[2].add_child(TreeNode("Cheetah"))
     node2 = t3.find(TreeNode("Cheetah"))
-    assert t3.get_least_common_ancestor(node1, node2) == TreeNode("Animal")
+    assert t3.get_lowest_common_ancestor(node1, node2) == TreeNode("Animal")
 
-def test_tree_least_common_ancestor_nodes_of_the_different_trees(t0: Tree, t1: Tree, t2: Tree, t3: Tree):
+def test_tree_lowest_common_ancestor_nodes_of_the_different_trees(t0: Tree, t1: Tree, t2: Tree, t3: Tree):
     node1 = t3.find(TreeNode("Wolf"))
     node2 = t3.find(TreeNode("Living Organisms"))
     with pytest.raises(TypeError):
-        t3.get_least_common_ancestor(node1, node2)
+        t3.get_lowest_common_ancestor(node1, node2)
 
-    assert t3.get_least_common_ancestor(node1, TreeNode("Dinosaur")) == None
+    assert t3.get_lowest_common_ancestor(node1, TreeNode("Dinosaur")) == None
 
 def test_tree_distance_between_nodes_with_lca(t3: Tree):
     node1 = node2 = t3.find(TreeNode("Wolf"))
@@ -497,3 +529,78 @@ def test_tree_breadth(t0: Tree, t1: Tree, t3: Tree):
     assert t3.breadth == 8
     t3.find(TreeNode("Felines")).add_child(TreeNode("Cougar"))
     assert t3.breadth == 9
+
+def test_tree_size(t0: Tree, t1: Tree, t3: Tree):
+    assert t0.size == len(t0) == 1
+    assert t1.size == len(t1) == 5
+    assert t3.size == len(t3) == 13
+
+def test_tree_height(t0: Tree, t1: Tree, t3: Tree):
+    assert t0.height == 0
+    assert t1.height == 1
+    assert t3.height == 2
+
+def test_tree_add_wrong_type(t0: Tree):
+    with pytest.raises(TypeError):
+        t0.add("str")
+    with pytest.raises(TypeError):
+        t0.add(1)
+    with pytest.raises(TypeError):
+        t0.add(TreeNode("str"), "str")
+
+def test_tree_add_correct_type(t0: Tree, t1: Tree):
+    node1 = TreeNode("Reptiles")
+    assert t0.height == 0
+    t0.add(node1)
+    assert node1 in t0
+    assert node1 in t0.root
+    assert t0.height == 1
+
+    assert t1.height == 1
+    t1.add(node1)
+    assert t1.height == 1
+    assert node1 in t1
+    assert node1 in t1.root
+
+    node2 = TreeNode("Crocodile")
+    t1.add(node2, node1)
+    assert t1.height == 2
+    assert node2 in t1
+    assert node2 not in t1.root
+    assert t1.find(node2).parent == node1
+    assert node2 in t1.find(node1)
+
+def test_tree_remove_wrong_type(t1: Tree):
+    with pytest.raises(TypeError):
+        t1.remove("str")
+    with pytest.raises(TypeError):
+        t1.remove(123)
+
+def test_tree_remove_root(t2: Tree, t3: Tree):
+    with pytest.raises(TypeError):
+        t2.remove(t2)
+    with pytest.raises(TypeError):
+        t3.remove(t3)
+
+def test_tree_remove_not_found(t2: Tree, t3: Tree):
+    with pytest.raises(ValueError):
+        t2.remove(TreeNode("Dinosaurs"))
+    with pytest.raises(ValueError):
+        t2.remove(TreeNode("T-Rex"))
+
+def test_tree_remove_correct_type(t2: Tree, t3: Tree):
+    node1 = TreeNode("Felines")
+    assert t2.remove(node1) == node1
+    assert node1 not in t2
+    assert t2.breadth == 3
+    assert t2.degree == 3
+    assert t2.height == 1
+
+    assert t3.breadth == 8
+    assert (removed_node := t3.remove(node1)) == node1
+    assert node1 not in t3
+    for child in removed_node.children:
+        assert child not in t3
+    assert t3.breadth == 6
+    assert t3.degree == 3
+    assert t3.height == 2
