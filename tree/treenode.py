@@ -119,7 +119,7 @@ class TreeNode:
     
     @property
     def leaves(self) -> tuple["TreeNode"]:
-        return tuple((node for node in self.descendants if node.is_leaf_node()))
+        return tuple((node for node in self.all_nodes if node.is_leaf_node()))
 
     @property
     def breadth(self) -> int:
