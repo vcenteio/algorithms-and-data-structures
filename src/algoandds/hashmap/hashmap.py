@@ -1,29 +1,37 @@
 ﻿from typing import Hashable, Union, Iterable
-from linked_list import LinkedList
-from tools import get_class_name
 from hashlib import sha1
+
+try:
+    from ..linkedlist import LinkedList
+    from ..tools.tools import get_class_name
+except ImportError:
+    import sys
+    import os
+    sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../")
+    from linkedlist import LinkedList
+    from tools.tools import get_class_name
 
 
 class HashMap:
     _DEFAULT_MAP_SIZE = 10
     _DEFAULT_LOAD_FACTOR = 0.75
-    
+
     def __init__(
-            self, _iter: Iterable = None, map_size: int = 10,
-            load_factor: float = 0.75
-        ):
+                self, _iter: Iterable = None, map_size: int = 10,
+                load_factor: float = 0.75
+            ):
         self._set_load_factor(load_factor)
         self._set_initial_map_size(map_size, len(_iter) if _iter else 0)
         self._hash_ceiling = self._INITIAL_MAP_SIZE
         self._create_new_list(map_size, _iter)
-    
+
     @property
     def _size(self):
-        return sum([1 for item in self._list if item != None])
+        return sum([1 for item in self._list if item is not None])
 
     @property
     def _capacity(self):
-        return len(self._list) 
+        return len(self._list)
 
     @property
     def _load(self):
@@ -32,16 +40,16 @@ class HashMap:
     def _set_load_factor(self, load_factor: float):
         if not isinstance(load_factor, float):
             raise TypeError(
-                f"Inappropriate type '{get_class_name(load_factor)}' "\
+                f"Inappropriate type '{get_class_name(load_factor)}' "
                 "for load factor. Should be 'float'."
             )
         if load_factor > 0.95 or load_factor < 0.75:
             raise ValueError(
-                "Load factor value should be between 0.75 and 0.95 "\
+                "Load factor value should be between 0.75 and 0.95 "
                 "(both ends included)."
             )
         self._load_factor = load_factor
-    
+
     def _get_size_with_load_margin(self, n):
         margin_ratio = 1 - self._load_factor
         return n + int(margin_ratio * n)
@@ -49,7 +57,7 @@ class HashMap:
     def _set_initial_map_size(self, map_size: int, number_of_new_items: int):
         if not isinstance(map_size, int) or isinstance(map_size, bool):
             raise TypeError(
-                f"Inappropriate type '{get_class_name(map_size)}' "\
+                f"Inappropriate type '{get_class_name(map_size)}' "
                 "for map size. Should be 'int'."
             )
         if map_size < (dmz := self._DEFAULT_MAP_SIZE):
@@ -69,7 +77,7 @@ class HashMap:
             self.update(_iter)
         else:
             raise TypeError("Non-iterable object passed at HashMap creation.")
-    
+
     def _calculate_new_map_size(self, number_of_new_items: int):
         n = number_of_new_items
         doublecap = self._capacity * 2
@@ -88,9 +96,10 @@ class HashMap:
 
     def _manage_current_load(self, number_of_new_items: int = 1):
         n = number_of_new_items
-        if self._is_resize_needed(n): self._resize_list(n)
+        if self._is_resize_needed(n):
+            self._resize_list(n)
 
-    @staticmethod 
+    @staticmethod
     def _is_valid_tuple(t: tuple):
         return len(t) == 2
 
@@ -106,19 +115,19 @@ class HashMap:
         self._manage_current_load(len(d))
         for key in d:
             self[key] = d[key]
-        
+
     @staticmethod
-    def _is_valid_list(l: list):
+    def _is_valid_list(_lst: list):
         try:
-            [(key, value) for (key, value) in l]
+            [(key, value) for (key, value) in _lst]
             return True
         except (TypeError, ValueError):
             return False
 
-    def _add_from_list(self, l: list):
-        if self._is_valid_list(l):
-            self._manage_current_load(len(l))
-            for (key, value) in l:
+    def _add_from_list(self, _list: list):
+        if self._is_valid_list(_list):
+            self._manage_current_load(len(_list))
+            for (key, value) in _list:
                 self[key] = value
         else:
             raise ValueError(
@@ -128,7 +137,7 @@ class HashMap:
     def update(self, _iterable: Union[tuple, dict, list]):
         if not isinstance(_iterable, Iterable):
             raise TypeError(
-                "Item should be a 2-item tuple, a list with 2-item "\
+                "Item should be a 2-item tuple, a list with 2-item "
                 "tuples or a dict."
             )
         if isinstance(_iterable, tuple):
@@ -139,39 +148,39 @@ class HashMap:
             self._add_from_list(_iterable)
         else:
             raise TypeError(
-                f"Iterables of type {get_class_name(_iterable)} "\
+                f"Iterables of type {get_class_name(_iterable)} "
                 "are not supported."
             )
-    
+
     def setdefault(self, key, default=None):
         if key in self.keys():
             return self[key]
         else:
             self.update((key, default))
             return default
-    
+
     def items(self):
-        return {key:value for key, value in self}
+        return {key: value for key, value in self}
 
     def keys(self):
         return tuple((key for key, _ in self))
 
     def values(self):
         return tuple((value for _, value in self))
-    
+
     def get(self, key, default=None):
         try:
             return self[key]
         except KeyError:
             return default
-    
+
     def pop(self, key, default=None):
         item_to_pop = self.get(key)
-        if item_to_pop != None:
-            del self[key] 
+        if item_to_pop is not None:
+            del self[key]
             return item_to_pop
         else:
-            if default != None:
+            if default is not None:
                 return default
             else:
                 raise KeyError("Mapping key not found.")
@@ -179,14 +188,14 @@ class HashMap:
     def clear(self):
         del self._list
         self._create_new_list(self._INITIAL_MAP_SIZE)
-    
+
     @staticmethod
     def _salt(key):
         encoded_key = key.encode() if isinstance(key, str) else bytes(key)
         return sum(sha1(encoded_key, usedforsecurity=True).digest())
 
     def _prehash(self, key):
-        return abs(hash(key) + self._salt(key)) 
+        return abs(hash(key) + self._salt(key))
 
     def _hash(self, key):
         # Although a tuple can be hashable if its values are hashable,
@@ -194,7 +203,7 @@ class HashMap:
         # tuples for the keys. It may be reconsidered in the future.
         if not isinstance(key, Hashable) or isinstance(key, tuple):
             raise TypeError(
-                f"Key be {get_class_name(key)} type. "\
+                f"Key be {get_class_name(key)} type. "
                 "Must be hashable and cannot be a tuple or NoneType."
             )
         # Since None is always hashable, for the sake of correctness,
@@ -205,7 +214,7 @@ class HashMap:
 
     def __getitem__(self, key):
         bucket = self._list[self._hash(key)]
-        if bucket == None:
+        if bucket is None:
             raise KeyError("Mapping key not found.")
         if isinstance(bucket, tuple):
             if bucket[0] == key:
@@ -216,26 +225,26 @@ class HashMap:
                 if existing_key == key:
                     return value
             raise KeyError("Mapping key not found.")
-    
+
     @staticmethod
     def _is_empty_bucket(bucket):
-        return bucket == None
-    
+        return bucket is None
+
     @staticmethod
     def _get_from_linked_list(key, linked_list):
         index = 0
         for existing_key, _ in linked_list:
             if existing_key == key:
-                return index 
+                return index
             index += 1
         return None
-    
+
     def __setitem__(self, key, value):
         hash_code = self._hash(key)
         bucket = self._list[hash_code]
         new_bucket = (key, value)
         if self._is_empty_bucket(bucket):
-            self._list[hash_code] = new_bucket 
+            self._list[hash_code] = new_bucket
         elif isinstance(bucket, tuple):
             if bucket[0] == key:
                 self._list[hash_code] = new_bucket
@@ -245,28 +254,28 @@ class HashMap:
         elif isinstance(bucket, LinkedList):
             index = self._get_from_linked_list(key, bucket)
             bucket: LinkedList
-            if index != None:
+            if index is not None:
                 bucket[index] = new_bucket
             else:
                 bucket.append(new_bucket)
-    
+
     def __delitem__(self, key):
         hash_code = self._hash(key)
         bucket = self._list[hash_code]
-        if bucket == None:
+        if bucket is None:
             raise KeyError("Mapping key not found.")
         if isinstance(bucket, tuple):
-            item_to_remove, self._list[hash_code] = bucket, None
-            del item_to_remove
+            _, self._list[hash_code] = bucket, None
+            del _
         elif isinstance(bucket, LinkedList):
             bucket: LinkedList
             index = self._get_from_linked_list(key, bucket)
-            if index == None:
+            if index is None:
                 raise KeyError("Mapping key not found.")
             else:
-                item_to_remove = bucket.pop(index)
-                del item_to_remove
-    
+                _ = bucket.pop(index)
+                del _
+
     def __iter__(self):
         for bucket in self._list:
             if isinstance(bucket, LinkedList):
@@ -274,34 +283,34 @@ class HashMap:
                     yield node
             elif isinstance(bucket, tuple):
                 yield bucket
-    
+
     def __contains__(self, key):
         for existing_key, _ in self:
             if existing_key == key:
                 return True
         return False
-    
+
     def _ensure_its_a_hashmap(func):
         def wrapper(self, other):
             if not isinstance(other, HashMap):
                 raise TypeError(
-                    "Cannot compare HashMap with object of another type "\
+                    "Cannot compare HashMap with object of another type "
                     f"({get_class_name(other)})."
                 )
             return func(self, other)
         return wrapper
-    
+
     @_ensure_its_a_hashmap
     def __eq__(self, other: "HashMap"):
         return self.items() == other.items()
-    
+
     @_ensure_its_a_hashmap
     def __ne__(self, other: "HashMap"):
         return self.items() != other.items()
-    
+
     def __len__(self):
         return sum((1 for _ in self))
-    
+
     def __repr__(self):
         return f"<HashMap: {self._list}>"
 
@@ -315,8 +324,8 @@ if __name__ == "__main__":
     hm1 = HashMap((100, "a"))
     hm2 = HashMap([(i, chr(i)) for i in range(4)])
     hm3 = HashMap()
-    hm3.update({i:i*2 for i in range(8)})
-    hm3.update({randint(0,100):randint(0,100) for i in range(100)})
-    hm4 = HashMap({randint(0, 500):i*2 for i in range(1000)})
-    hm4.update({i:i*2 for i in range(1000, 2000)})
-    hm5 = HashMap({i:i*2 for i in range(100000)})
+    hm3.update({i: i*2 for i in range(8)})
+    hm3.update({randint(0, 100): randint(0, 100) for i in range(100)})
+    hm4 = HashMap({randint(0, 500): i*2 for i in range(1000)})
+    hm4.update({i: i*2 for i in range(1000, 2000)})
+    hm5 = HashMap({i: i*2 for i in range(100000)})

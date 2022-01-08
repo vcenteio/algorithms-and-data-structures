@@ -1,6 +1,13 @@
-﻿from typing import Type
-from tree import Tree, TreeNode
-import pytest
+﻿import pytest
+
+try:
+    from ..src.algoandds.tree import Tree, TreeNode
+except ImportError:
+    import sys
+    import os
+    sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../")
+    from src.algoandds.tree import Tree, TreeNode
+
 
 @pytest.fixture
 def n0():
@@ -71,7 +78,7 @@ def test_node_instantiation_with_parent_and_children(n2: TreeNode):
     expected_children_level = new_node.level+1
     for child in new_node._children: 
         assert child.level == expected_children_level
-    
+
     expected_descendants = set()
     for child in children:
         for node in child.all_nodes:
@@ -106,13 +113,13 @@ def test_node_instantiation_with_parent_and_children_with_subchildren(n3: TreeNo
             assert subchild.level == 4
     for descendant in n3.descendants:
         assert descendant.level == descendant._parent.level+1
-    
+
     assert n3._parent == parent
     for child in n3.children:
         assert child._parent == n3
         for subchild in child.children:
             assert subchild._parent == child
-    
+
 def test_node_add_child_correct_type(n0: TreeNode):
     n0.add_child(child_a := TreeNode("aa"))
     n0.add_child(child_b := TreeNode("ab"))
@@ -181,11 +188,11 @@ def test_node_set_level(n3: TreeNode):
     assert n3.level == 1
     for descendant in n3.descendants:
         assert descendant.level == descendant.parent.level+1
-    
+
 def test_node_set_children_with_empty_list(n0: TreeNode, n1: TreeNode):
     n0.set_children([])
     assert n0._children == []
-    
+
     n1_children_copy = n1.children[:]
     n1.set_children([])
     for child in n1_children_copy:
@@ -259,7 +266,7 @@ def test_node_ancestors(n0: TreeNode, n1: TreeNode, n2: TreeNode):
 def test_node_siblings(n0: TreeNode, n1: TreeNode):
     assert n0.siblings == ()
     assert n1.siblings == ()
-    
+
     children = tuple(map(TreeNode, ["Canines", "Bovines", "Felines", "Birds"]))
 
     i = 0
@@ -278,14 +285,14 @@ def test_node_height(n0: TreeNode, n1: TreeNode, n2: TreeNode, n3: TreeNode):
     assert n2.parent.height == 2
     for child in n2.children:
         assert child.height == 0
-    
+
     assert n3.parent.height == 3
     for descendant in n3.descendants:
         if descendant.is_leaf_node():
             assert descendant.height == 0
         if not descendant.height:
             assert descendant.is_leaf_node()
-    
+
     n3.children[0].pop_child(TreeNode("Wolf"))
     n3.children[0].pop_child(TreeNode("Dog"))
     assert n3.parent.height == 3
@@ -311,7 +318,7 @@ def test_node_depth(n0: TreeNode, n1: TreeNode, n2: TreeNode, n3: TreeNode):
     assert n2.parent.depth == 0
     for child in n2.children:
         assert child.depth == 2
-    
+
     for descendant in n3.descendants:
         if descendant.is_leaf_node():
             assert descendant.depth == 3
@@ -354,13 +361,13 @@ def test_node_distance_from_descendant_correct_type(n0: TreeNode, n1: TreeNode, 
         n0.get_distance_from_descendant(n1)
     with pytest.raises(ValueError):
         n1.get_distance_from_descendant(n1)
-    
+
     for child in n1.children:
         assert n1.get_distance_from_descendant(child) == 1
     for child in n2.children:
         for subchild in child:
             assert n2.get_distance_from_descendant(subchild) == 2 == n2.get_distance_from_descendant(child)+1
-    
+
     for node in n3.parent.descendants:
         assert n3.parent.get_distance_from_descendant(node) == node.level - n3.parent.level
 
@@ -472,7 +479,7 @@ def test_tree_lowest_common_ancestor_nodes_of_the_same_tree(t3: Tree):
     assert t3.get_lowest_common_ancestor(node1, node2) == TreeNode("Canines")
     node2 = t3.find(TreeNode("Felines"))
     assert t3.get_lowest_common_ancestor(node1, node2) == TreeNode("Animal")
-    
+
     t3.root.children[2].add_child(TreeNode("Cheetah"))
     node2 = t3.find(TreeNode("Cheetah"))
     assert t3.get_lowest_common_ancestor(node1, node2) == TreeNode("Animal")

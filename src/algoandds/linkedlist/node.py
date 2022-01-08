@@ -1,6 +1,14 @@
-﻿from typing import Any, Hashable
+﻿from typing import Hashable
 from abc import ABC, abstractmethod
-from tools import get_class_name
+
+try:
+    from ..tools.tools import get_class_name
+except ImportError:
+    import sys
+    import os
+    sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../")
+    from tools.tools import get_class_name
+
 
 class INode(ABC):
     data: Hashable = None
@@ -20,14 +28,14 @@ class Node(INode):
     def __init__(self, data: Hashable = None):
         if not isinstance(data, Hashable):
             raise TypeError(
-                "Only hashable objects are accepted as node values. "\
+                "Only hashable objects are accepted as node values. "
                 f"'{get_class_name(data).title()}' objects are not hashable."
             )
         self.data = data
-    
+
     def __getitem__(self, key: int):
         return self.data[key]
-    
+
     def __iter__(self):
         return iter(self.data)
 
@@ -36,19 +44,19 @@ class Node(INode):
 
     def __str__(self):
         return f"{self.data}"
-    
+
     def __eq__(self, other):
         if isinstance(other, Node):
             return self.data == other.data
         else:
             return self.data == other
-    
+
     def __ne__(self, other):
         if isinstance(other, Node):
             return self.data != other.data
         else:
             return self.data != other
-    
+
     def __hash__(self):
         return hash(self.data)
 
@@ -57,7 +65,7 @@ class Node(INode):
 
     def __ge__(self, other):
         return self.data >= other.data
-    
+
     def __lt__(self, other):
         return self.data < other.data
 

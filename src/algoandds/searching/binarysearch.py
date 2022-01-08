@@ -11,9 +11,10 @@ def binary_search(list, target):
             last = midpoint - 1
     return None
 
+
 def binary_search_recursive(list, target):
     if not list:
-        return None 
+        return None
     midpoint = len(list) // 2
     if list[midpoint] == target:
         return midpoint
@@ -27,20 +28,19 @@ def binary_search_recursive(list, target):
 if __name__ == "__main__":
     import random
     import time
-    from memory_profiler import memory_usage
 
     SIZE = 1000000
     TARGET = 802456
 
-    l = [random.randint(0, SIZE) for i in range(SIZE)]
-    l.sort()
+    l1 = [random.randint(0, SIZE) for _ in range(SIZE)]
+    l1.sort()
 
     start = time.time()
-    print(binary_search(l, TARGET))
+    print(binary_search(l1, TARGET))
     end = time.time()
     print(f"elapsed time: {end-start}")
 
     start = time.time()
-    print(binary_search_recursive(l, TARGET))
+    print(binary_search_recursive(l1, TARGET))
     end = time.time()
     print(f"elapsed time: {end-start}")

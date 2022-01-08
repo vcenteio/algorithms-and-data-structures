@@ -1,5 +1,9 @@
-﻿from typing import Sequence, Mapping, Any
+﻿from typing import Any, Sequence, Mapping, Hashable
 from random import shuffle
+
+
+def is_hashable(item: Any) -> bool:
+    return isinstance(item, Hashable)
 
 
 def is_sorted(seq: Sequence) -> bool:
@@ -15,13 +19,16 @@ def is_sorted(seq: Sequence) -> bool:
             break
     return True
 
+
 def get_class_name(obj: Any) -> str:
     return obj.__class__.__name__
+
 
 def generate_random_indexes(length: int) -> list:
     indexes = [i for i in range(length)]
     shuffle(indexes)
     return indexes
+
 
 def scrumble(seq: Sequence) -> Sequence:
     seq_type = seq.__class__
@@ -31,9 +38,10 @@ def scrumble(seq: Sequence) -> Sequence:
         new_sequence.append(seq[i])
     return seq_type(new_sequence)
 
+
 def minindex(seq: Sequence) -> int:
     if not isinstance(seq, (Sequence, Mapping)):
-        raise TypeError(f"Inappropriate argument type ({get_class_name(seq)}).")
+        raise TypeError(f"Inappropriate argument type {get_class_name(seq)}.")
     iter_obj = iter(seq)
     current_item = minimum = next(iter_obj)
     index = minimum_index = 0
@@ -46,4 +54,4 @@ def minindex(seq: Sequence) -> int:
                 minimum_index = index
         except StopIteration:
             break
-    return minimum_index 
+    return minimum_index
