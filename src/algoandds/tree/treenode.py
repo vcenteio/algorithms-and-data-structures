@@ -1,20 +1,16 @@
-﻿from typing import Any, List, Tuple, Sequence
+from typing import Any, List, Tuple, Sequence, Union
 
-try:
-    from ..tools.tools import is_hashable
-except ImportError:
-    import sys
-    import os
-    sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../")
-    from tools.tools import is_hashable
+from ..tools.tools import is_hashable
 
 
 class TreeNode:
-    _parent: "TreeNode" = None
+    _parent: Union["TreeNode", None] = None
 
     def __init__(
-        self, data, parent: "TreeNode" = None,
-        _children: List["TreeNode"] = None
+        self,
+        data,
+        parent: "TreeNode" = None,
+        _children: Sequence["TreeNode"] = None,
     ):
         self.data: Any = data
         self._children: list["TreeNode"] = []
@@ -52,7 +48,7 @@ class TreeNode:
                 return child_to_remove
         raise ValueError(f"Node '{self}' has no child node '{child}'.")
 
-    def set_parent(self, parent: "TreeNode"):
+    def set_parent(self, parent: Union["TreeNode", None]):
         """
         Sets the parent node.
 
@@ -72,7 +68,7 @@ class TreeNode:
             raise TypeError("Inappropriate type for parent.")
 
     @property
-    def parent(self) -> "TreeNode":
+    def parent(self) -> Union["TreeNode", None]:
         """
         The direct ancestor of the node.
 
@@ -81,7 +77,7 @@ class TreeNode:
         return self._parent
 
     @property
-    def ancestors(self) -> Tuple["TreeNode"]:
+    def ancestors(self) -> Tuple["TreeNode", ...]:
         """All the nodes in the path from the node parent to the root."""
         current = self.parent
         ancestors = []
@@ -108,7 +104,7 @@ class TreeNode:
         return depth
 
     @property
-    def siblings(self) -> Tuple["TreeNode"]:
+    def siblings(self) -> Tuple["TreeNode", ...]:
         """
         Tuple containing all the children from the node's parent,
         excluding the node itself.
@@ -116,21 +112,20 @@ class TreeNode:
         if not self.parent:
             return ()
         return tuple(
-                (child for child in self.parent.children if child != self)
-            )
+            (child for child in self.parent.children if child != self)
+        )
 
     @property
-    def neighbours(self) -> Tuple["TreeNode"]:
+    def neighbours(self) -> Tuple["TreeNode", ...]:
         """Tuple containing node's parent and children, if any exists."""
-        parent_and_children = (self.parent,) + self.children
-        return parent_and_children if self.parent else self.children
+        return (self.parent,) + self.children if self.parent else self.children
 
     def _release_current_children(self):
         for child in self._children:
             child.set_parent(None)
         self._children = []
 
-    def set_children(self, children: Sequence["TreeNode"]):
+    def set_children(self, children: Union[Sequence["TreeNode"], None]):
         """
         Substitutes the current node's children.
 
@@ -198,7 +193,7 @@ class TreeNode:
         return bool(self._children)
 
     @property
-    def leaves(self) -> Tuple["TreeNode"]:
+    def leaves(self) -> Tuple["TreeNode", ...]:
         """A tuple with all the leaf nodes, if any exist."""
         return tuple((node for node in self.all_nodes if node.is_leaf_node()))
 
@@ -208,23 +203,23 @@ class TreeNode:
         return len(self.leaves)
 
     @property
-    def all_nodes(self) -> Tuple["TreeNode"]:
+    def all_nodes(self) -> Tuple["TreeNode", ...]:
         """A tuple containing all descendant nodes and the node itself."""
         if self.is_leaf_node():
             return (self,)
         else:
-            nodes = []
+            nodes: List[TreeNode] = []
             for child in self._children:
                 nodes.extend(child.all_nodes)
             nodes.insert(0, self)
             return tuple(nodes)
 
     @property
-    def descendants(self) -> Tuple["TreeNode"]:
+    def descendants(self) -> Tuple["TreeNode", ...]:
         """A tuple containing all nodes excluding self."""
         all_nodes = self.all_nodes
         self_position = 0
-        range_excluding_self = slice(self_position+1, len(all_nodes))
+        range_excluding_self = slice(self_position + 1, len(all_nodes))
         return all_nodes[range_excluding_self]
 
     def __repr__(self):
@@ -244,5 +239,5 @@ class TreeNode:
     def __hash__(self):
         return hash(self.data)
 
-    def __eq__(self, other: "TreeNode"):
+    def __eq__(self, other):
         return hash(self) == hash(other) if is_hashable(other) else False
