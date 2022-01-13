@@ -1,22 +1,18 @@
-﻿from typing import List, Union
+"""The Tree class module."""
 
+from typing import List, Union
 
-try:
-    from .treenode import TreeNode
-    from .helpers import is_node
-except ImportError:
-    from treenode import TreeNode
-    from helpers import is_node
-try:
-    from ..tools.tools import get_class_name
-except ImportError:
-    import sys
-    import os
-    sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../")
-    from tools.tools import get_class_name
+from .treenode import TreeNode
+from .helpers import is_node
+from ..tools.tools import get_class_name
 
 
 class Tree:
+    """
+    The Tree data structure class.
+
+    Empty trees are not allowed and, therefore, a root must be provided.
+    """
     def __init__(self, root: TreeNode):
         self.set_root(root)
 
@@ -140,7 +136,7 @@ class Tree:
         """
         return self.root.height
 
-    def find(self, node: TreeNode) -> TreeNode:
+    def find(self, node: TreeNode) -> Union[TreeNode, None]:
         """Searches for the node in the tree and returns it if found.
 
         Returns None if not found.
@@ -195,7 +191,7 @@ class Tree:
             raise ValueError(f"Node {node} not found.")
         # If the node was found and it's not the root,
         # it must have a parent.
-        return _node.parent.pop_child(node)
+        return _node.parent.pop_child(node)  # type: ignore[union-attr]
 
     def __iter__(self):
         return iter(self.root.all_nodes)
