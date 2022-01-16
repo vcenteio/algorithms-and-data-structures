@@ -1,15 +1,8 @@
-﻿from typing import Hashable, Union, Iterable
+﻿from typing import Callable, Hashable, Union, Iterable, Tuple, Dict, List
 from hashlib import sha1
 
-try:
-    from ..linkedlist import LinkedList
-    from ..tools.tools import get_class_name
-except ImportError:
-    import sys
-    import os
-    sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../")
-    from linkedlist import LinkedList
-    from tools.tools import get_class_name
+from ..linkedlist import LinkedList
+from ..tools.tools import get_class_name
 
 
 class HashMap:
@@ -17,24 +10,26 @@ class HashMap:
     _DEFAULT_LOAD_FACTOR = 0.75
 
     def __init__(
-                self, _iter: Iterable = None, map_size: int = 10,
-                load_factor: float = 0.75
-            ):
+        self,
+        _iter: Union[Tuple, Dict, List] = None,
+        map_size: int = 10,
+        load_factor: float = 0.75,
+    ):
         self._set_load_factor(load_factor)
         self._set_initial_map_size(map_size, len(_iter) if _iter else 0)
         self._hash_ceiling = self._INITIAL_MAP_SIZE
         self._create_new_list(map_size, _iter)
 
     @property
-    def _size(self):
+    def _size(self) -> int:
         return sum([1 for item in self._list if item is not None])
 
     @property
-    def _capacity(self):
+    def _capacity(self) -> int:
         return len(self._list)
 
     @property
-    def _load(self):
+    def _load(self) -> float:
         return self._size / self._capacity
 
     def _set_load_factor(self, load_factor: float):
@@ -43,14 +38,14 @@ class HashMap:
                 f"Inappropriate type '{get_class_name(load_factor)}' "
                 "for load factor. Should be 'float'."
             )
-        if load_factor > 0.95 or load_factor < 0.75:
+        if load_factor < 0.75 or load_factor > 0.95:
             raise ValueError(
                 "Load factor value should be between 0.75 and 0.95 "
                 "(both ends included)."
             )
         self._load_factor = load_factor
 
-    def _get_size_with_load_margin(self, n):
+    def _get_size_with_load_margin(self, n: int) -> int:
         margin_ratio = 1 - self._load_factor
         return n + int(margin_ratio * n)
 
@@ -68,7 +63,9 @@ class HashMap:
         else:
             self._INITIAL_MAP_SIZE = self._get_size_with_load_margin(map_size)
 
-    def _create_new_list(self, map_size: int, _iter: Iterable = None):
+    def _create_new_list(
+        self, map_size: int, _iter: Union[Tuple, Dict, List] = None
+    ):
         self._list = [None for _ in range(map_size)]
         self._hash_ceiling = map_size
         if not _iter:
@@ -78,7 +75,7 @@ class HashMap:
         else:
             raise TypeError("Non-iterable object passed at HashMap creation.")
 
-    def _calculate_new_map_size(self, number_of_new_items: int):
+    def _calculate_new_map_size(self, number_of_new_items: int) -> int:
         n = number_of_new_items
         doublecap = self._capacity * 2
         size_with_margin = self._get_size_with_load_margin(n)
@@ -130,15 +127,20 @@ class HashMap:
             for (key, value) in _list:
                 self[key] = value
         else:
-            raise ValueError(
-                "List items should be key-value pair iterables."
-            )
+            raise ValueError("List items should be key-value pair iterables.")
 
-    def update(self, _iterable: Union[tuple, dict, list]):
+    def update(self, _iterable: Union[Tuple, Dict, List]):
+        """Updates hashmap from dict/iterable.
+
+        Item should be a tuple with a key-value pair,
+        a list of tuples with key-value pairs
+        or a dict.
+        """
         if not isinstance(_iterable, Iterable):
             raise TypeError(
-                "Item should be a 2-item tuple, a list with 2-item "
-                "tuples or a dict."
+                "Item should be a tuple with a key-value pair, "
+                "a list of tuples with key-value pairs "
+                "or a dict."
             )
         if isinstance(_iterable, tuple):
             self._add_from_tuple(_iterable)
@@ -153,28 +155,47 @@ class HashMap:
             )
 
     def setdefault(self, key, default=None):
-        if key in self.keys():
-            return self[key]
-        else:
+        """Insert key with the value of default if
+        the key is not in the hashmap.
+
+        Returns the value for key if the latter exists
+        in the hashmap.
+        """
+        if key not in self.keys():
             self.update((key, default))
             return default
+        else:
+            return self[key]
 
-    def items(self):
+    def items(self) -> Dict:
+        """Returns a dictionary with all the key-value pairs of the hashmap."""
         return {key: value for key, value in self}
 
-    def keys(self):
+    def keys(self) -> Tuple:
+        """Returns a tuple with all the keys of the hashmap."""
         return tuple((key for key, _ in self))
 
-    def values(self):
+    def values(self) -> Tuple:
+        """Returns a tuple with all the values of the hashmap."""
         return tuple((value for _, value in self))
 
     def get(self, key, default=None):
+        """Returns the value for key if the latter exists in the hashmap,
+        else default.
+        """
         try:
             return self[key]
         except KeyError:
             return default
 
     def pop(self, key, default=None):
+        """Removes the specified key from the hashmap
+        and returns the associated value.
+
+        If key does not exists in the hashmap,
+        returns default value if one was given,
+        otherwise KeyError is raised.
+        """
         item_to_pop = self.get(key)
         if item_to_pop is not None:
             del self[key]
@@ -186,18 +207,19 @@ class HashMap:
                 raise KeyError("Mapping key not found.")
 
     def clear(self):
+        """Removes all items from the hashmap."""
         del self._list
         self._create_new_list(self._INITIAL_MAP_SIZE)
 
     @staticmethod
-    def _salt(key):
+    def _salt(key) -> int:
         encoded_key = key.encode() if isinstance(key, str) else bytes(key)
         return sum(sha1(encoded_key, usedforsecurity=True).digest())
 
     def _prehash(self, key):
         return abs(hash(key) + self._salt(key))
 
-    def _hash(self, key):
+    def _hash(self, key) -> int:
         # Although a tuple can be hashable if its values are hashable,
         # in this specification I want to prevent users from using
         # tuples for the keys. It may be reconsidered in the future.
@@ -227,7 +249,7 @@ class HashMap:
             raise KeyError("Mapping key not found.")
 
     @staticmethod
-    def _is_empty_bucket(bucket):
+    def _is_empty_bucket(bucket) -> bool:
         return bucket is None
 
     @staticmethod
@@ -284,13 +306,15 @@ class HashMap:
             elif isinstance(bucket, tuple):
                 yield bucket
 
-    def __contains__(self, key):
+    def __contains__(self, key) -> bool:
         for existing_key, _ in self:
             if existing_key == key:
                 return True
         return False
 
-    def _ensure_its_a_hashmap(func):
+    def _ensure_its_a_hashmap(  # type: ignore
+        func: Callable[["HashMap", "HashMap"], bool]
+    ):
         def wrapper(self, other):
             if not isinstance(other, HashMap):
                 raise TypeError(
@@ -298,34 +322,22 @@ class HashMap:
                     f"({get_class_name(other)})."
                 )
             return func(self, other)
+
         return wrapper
 
     @_ensure_its_a_hashmap
-    def __eq__(self, other: "HashMap"):
+    def __eq__(self, other: "HashMap") -> bool:
         return self.items() == other.items()
 
     @_ensure_its_a_hashmap
-    def __ne__(self, other: "HashMap"):
+    def __ne__(self, other: "HashMap") -> bool:
         return self.items() != other.items()
 
-    def __len__(self):
+    def __len__(self) -> int:
         return sum((1 for _ in self))
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<HashMap: {self._list}>"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.items())
-
-
-# for manual testing purposes
-if __name__ == "__main__":
-    from random import randint
-    hm1 = HashMap((100, "a"))
-    hm2 = HashMap([(i, chr(i)) for i in range(4)])
-    hm3 = HashMap()
-    hm3.update({i: i*2 for i in range(8)})
-    hm3.update({randint(0, 100): randint(0, 100) for i in range(100)})
-    hm4 = HashMap({randint(0, 500): i*2 for i in range(1000)})
-    hm4.update({i: i*2 for i in range(1000, 2000)})
-    hm5 = HashMap({i: i*2 for i in range(100000)})
