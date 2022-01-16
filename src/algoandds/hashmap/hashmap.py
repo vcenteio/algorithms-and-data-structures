@@ -1,4 +1,4 @@
-﻿from typing import Callable, Hashable, Union, Iterable, Tuple, Dict, List
+﻿from typing import Callable, Hashable, Type, Union, Iterable, Tuple, Dict, List
 from hashlib import sha1
 
 from ..linkedlist import LinkedList
@@ -17,7 +17,6 @@ class HashMap:
     ):
         self._set_load_factor(load_factor)
         self._set_initial_map_size(map_size, len(_iter) if _iter else 0)
-        self._hash_ceiling = self._INITIAL_MAP_SIZE
         self._create_new_list(map_size, _iter)
 
     @property
@@ -32,7 +31,17 @@ class HashMap:
     def _load(self) -> float:
         return self._size / self._capacity
 
-    def _set_load_factor(self, load_factor: float):
+    def _enforce_valid_hash_ceiling(self, ceiling: int):
+        if not isinstance(ceiling, int) or isinstance(ceiling, bool):
+            raise TypeError("Hash ceiling hash to be an int.")
+        if ceiling != self._capacity:
+            raise ValueError("Invalid hash ceiling value.")
+        
+    def _set_hash_ceiling(self, ceiling: int):
+        self._enforce_valid_hash_ceiling(ceiling)
+        self._hash_ceiling = ceiling
+
+    def _enforce_valid_load_factor(self, load_factor: float):
         if not isinstance(load_factor, float):
             raise TypeError(
                 f"Inappropriate type '{get_class_name(load_factor)}' "
@@ -43,35 +52,60 @@ class HashMap:
                 "Load factor value should be between 0.75 and 0.95 "
                 "(both ends included)."
             )
+
+    def _set_load_factor(self, load_factor: float):
+        self._enforce_valid_load_factor(load_factor)
         self._load_factor = load_factor
 
+    @staticmethod
+    def _enforce_valid_number_of_new_items(n: int):
+        if not isinstance(n, int) or isinstance(n, bool):
+            raise TypeError(f"Inappropriate type '{get_class_name(n)}' "
+                "for number of items. Should be 'int'."
+                )
+        if n < 0:
+            raise ValueError(f"Number of new items should be >= 0.")
+
     def _get_size_with_load_margin(self, n: int) -> int:
+        self._enforce_valid_load_factor(self._load_factor)
+        self._enforce_valid_number_of_new_items(n)
         margin_ratio = 1 - self._load_factor
         return n + int(margin_ratio * n)
 
-    def _set_initial_map_size(self, map_size: int, number_of_new_items: int):
+    def _enforce_valid_map_size(self, map_size: int):
         if not isinstance(map_size, int) or isinstance(map_size, bool):
             raise TypeError(
                 f"Inappropriate type '{get_class_name(map_size)}' "
                 "for map size. Should be 'int'."
             )
-        if map_size < (dmz := self._DEFAULT_MAP_SIZE):
-            raise ValueError(f"Map size cannot be smaller than {dmz}.")
-        n = number_of_new_items
-        if map_size < n:
-            self._INITIAL_MAP_SIZE = self._get_size_with_load_margin(n)
+        if map_size < (DMS := self._DEFAULT_MAP_SIZE):
+            raise ValueError(f"Map size cannot be smaller than {DMS}.")
+
+    def _set_initial_map_size(self, map_size: int, number_of_new_items: int):
+        self._enforce_valid_map_size(map_size)
+        n = number_of_new_items if number_of_new_items > map_size else map_size
+        self._INITIAL_MAP_SIZE = self._get_size_with_load_margin(n)
+
+    def _reset_list(self, map_size: int = None):
+        if map_size is not None:
+            self._enforce_valid_map_size(map_size)
+            n = map_size
         else:
-            self._INITIAL_MAP_SIZE = self._get_size_with_load_margin(map_size)
+            n = self._INITIAL_MAP_SIZE
+        self._list = [None for _ in range(n)]
+        self._set_hash_ceiling(n)
 
     def _create_new_list(
-        self, map_size: int, _iter: Union[Tuple, Dict, List] = None
+        self, map_size: int, _iter: Union[Tuple, List, Dict] = None
     ):
-        self._list = [None for _ in range(map_size)]
-        self._hash_ceiling = map_size
-        if not _iter:
-            return
+        if _iter is None:
+            self._reset_list(map_size)
         elif isinstance(_iter, Iterable):
+            iter_length = len(_iter)
+            n = map_size if map_size > iter_length else iter_length 
+            self._reset_list(n)
             self.update(_iter)
+
         else:
             raise TypeError("Non-iterable object passed at HashMap creation.")
 
@@ -100,7 +134,11 @@ class HashMap:
     def _is_valid_tuple(t: tuple):
         return len(t) == 2
 
-    def _add_from_tuple(self, t: tuple):
+    def _add_from_tuple(self, t: Tuple):
+        if not isinstance(t, Tuple):
+            raise TypeError(
+                "Requested update from tuple with non-tuple type object."
+            )
         if self._is_valid_tuple(t):
             self._manage_current_load()
             key, value = t
@@ -108,23 +146,31 @@ class HashMap:
         else:
             raise ValueError("Tuple should have a length of 2.")
 
-    def _add_from_dict(self, d: dict):
+    def _add_from_dict(self, d: Dict):
+        if not isinstance(d, Dict):
+            raise TypeError(
+                "Requested update from dict with non-dict type object."
+            )
         self._manage_current_load(len(d))
         for key in d:
             self[key] = d[key]
 
     @staticmethod
-    def _is_valid_list(_lst: list):
+    def _is_valid_list(l: List) -> bool:
         try:
-            [(key, value) for (key, value) in _lst]
+            [(key, value) for (key, value) in l]
             return True
         except (TypeError, ValueError):
             return False
 
-    def _add_from_list(self, _list: list):
-        if self._is_valid_list(_list):
-            self._manage_current_load(len(_list))
-            for (key, value) in _list:
+    def _add_from_list(self, l: List):
+        if not isinstance(l, List):
+            raise TypeError(
+                "Requested update from list with non-list type object."
+            )
+        if self._is_valid_list(l):
+            self._manage_current_load(len(l))
+            for (key, value) in l:
                 self[key] = value
         else:
             raise ValueError("List items should be key-value pair iterables.")
@@ -142,11 +188,11 @@ class HashMap:
                 "a list of tuples with key-value pairs "
                 "or a dict."
             )
-        if isinstance(_iterable, tuple):
+        if isinstance(_iterable, Tuple):
             self._add_from_tuple(_iterable)
-        elif isinstance(_iterable, dict):
+        elif isinstance(_iterable, Dict):
             self._add_from_dict(_iterable)
-        elif isinstance(_iterable, list):
+        elif isinstance(_iterable, List):
             self._add_from_list(_iterable)
         else:
             raise TypeError(
@@ -208,8 +254,7 @@ class HashMap:
 
     def clear(self):
         """Removes all items from the hashmap."""
-        del self._list
-        self._create_new_list(self._INITIAL_MAP_SIZE)
+        self._reset_list()
 
     @staticmethod
     def _salt(key) -> int:
@@ -303,7 +348,7 @@ class HashMap:
             if isinstance(bucket, LinkedList):
                 for node in bucket:
                     yield node
-            elif isinstance(bucket, tuple):
+            elif isinstance(bucket, Tuple):
                 yield bucket
 
     def __contains__(self, key) -> bool:
