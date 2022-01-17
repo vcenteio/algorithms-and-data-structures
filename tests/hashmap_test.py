@@ -1,5 +1,4 @@
-﻿from copy import error
-from typing import Dict, List
+﻿from typing import Dict, List
 import pytest
 
 from src.algoandds.hashmap import HashMap
@@ -62,27 +61,18 @@ def test_get_size_with_load_margin_wrong_value(hm0: HashMap, value, error):
 )
 def test_set_initial_map_size_wrong_type(hm0: HashMap, value, error):
     with pytest.raises(error):
-        hm0._set_initial_map_size(value, 10)
+        hm0._set_initial_map_size(value)
 
 
 @pytest.mark.parametrize(
-    ("value", "error"),
-    [(-1, ValueError), (0, ValueError), (9, ValueError)]
-)
-def test_set_initial_map_size_wrong_value(hm0: HashMap, value, error):
-    with pytest.raises(error):
-        hm0._set_initial_map_size(value, 10)
-
-
-@pytest.mark.parametrize(
-    ("load_factor", "map_size", "number_of_new_items", "expected_size"),
-    [(0.75, 10, 20, 25), (0.75, 10, 3, 12), (0.823, 20, 3, 20 + int(20*0.177))]
+    ("load_factor", "number_of_new_items", "expected_size"),
+    [(0.75, 20, 20 * 2), (0.75, 3, 10), (0.823, 20, 20 * 2)]
 )
 def test_set_initial_map_size_correct_argument(
-    hm0: HashMap, load_factor, map_size, number_of_new_items, expected_size
+    hm0: HashMap, load_factor, number_of_new_items, expected_size
     ):
     hm0._load_factor = load_factor
-    hm0._set_initial_map_size(map_size, number_of_new_items)
+    hm0._set_initial_map_size(number_of_new_items)
     assert hm0._INITIAL_MAP_SIZE == expected_size
 
 
@@ -213,29 +203,44 @@ def test_set_hash_ceiling_correct_value(hm0: HashMap, value):
 
 
 @pytest.mark.parametrize(
-    "wrong_iter",
-    [1, 1.2, True, HashMap, sorted, {i for i in range(20)}]
+    "wrong_map_size",
+    [1.2, True, HashMap, sorted, {i for i in range(20)}]
 )
-def test_create_new_list_wrong_iter_type(hm0: HashMap, wrong_iter):
+def test_create_new_list_wrong_map_size_type(hm0: HashMap, wrong_map_size):
     with pytest.raises(TypeError):
-        hm0._create_new_list(10, wrong_iter)
+        hm0._create_new_list(wrong_map_size)
 
 
 @pytest.mark.parametrize(
-    "iter",
-    [[(i, i * 2) for i in range(20)], {i: i * 2 for i in range(20)}]
+    "wrong_map_size",
+    [1, 0, -1, 9, -1000]
 )
-def test_create_new_list_correct_iter_type(hm0: HashMap, iter):
-    hm0._create_new_list(10, iter)
-    assert hm0.items() == dict(iter)
+def test_create_new_list_wrong_map_size_value(hm0: HashMap, wrong_map_size):
+    with pytest.raises(ValueError):
+        hm0._create_new_list(wrong_map_size)
+
+
+@pytest.mark.parametrize(
+    "map_size",
+    [11, 20, 1000]
+)
+def test_create_new_list_correct_iter_type(hm0: HashMap, map_size):
+    hm0._create_new_list(map_size)
+    assert hm0._capacity == hm0._hash_ceiling == map_size
+    assert hm0._size == len(hm0) == 0
+
+
+def test_create_new_list_no_arguments(hm0: HashMap):
+    hm0._create_new_list()
+    assert hm0._capacity == hm0._hash_ceiling == hm0._INITIAL_MAP_SIZE
+    assert hm0._size == len(hm0) == 0
 
 
 def test_create_hashmap_with_no_items(hm0: HashMap):
     assert hm0._list == [None for _ in range(HashMap._DEFAULT_MAP_SIZE)]
     assert hm0._load_factor == HashMap._DEFAULT_LOAD_FACTOR
     assert hm0._capacity == HashMap._DEFAULT_MAP_SIZE
-    assert hm0._size == 0
-    assert len(hm0) == 0
+    assert hm0._size == len(hm0) == 0
 
 
 def test_create_hashmap_from_single_tuple():

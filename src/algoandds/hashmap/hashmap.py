@@ -10,14 +10,18 @@ class HashMap:
     _DEFAULT_LOAD_FACTOR = 0.75
 
     def __init__(
-        self,
-        _iter: Union[Tuple, Dict, List] = None,
-        map_size: int = 10,
-        load_factor: float = 0.75,
+        self, _iter: Union[Tuple, Dict, List] = None, load_factor: float = 0.75
     ):
         self._set_load_factor(load_factor)
-        self._set_initial_map_size(map_size, len(_iter) if _iter else 0)
-        self._create_new_list(map_size, _iter)
+        if _iter is None:
+            self._set_initial_map_size()
+            self._create_new_list()
+        elif isinstance(_iter, Iterable):
+            n = len(_iter)
+            self._set_initial_map_size(n)
+            self._initialize_new_list(_iter, self._INITIAL_MAP_SIZE)
+        else:
+            raise TypeError("Non-iterable object passed at HashMap creation.")
 
     @property
     def _size(self) -> int:
@@ -36,7 +40,7 @@ class HashMap:
             raise TypeError("Hash ceiling hash to be an int.")
         if ceiling != self._capacity:
             raise ValueError("Invalid hash ceiling value.")
-        
+
     def _set_hash_ceiling(self, ceiling: int):
         self._enforce_valid_hash_ceiling(ceiling)
         self._hash_ceiling = ceiling
@@ -60,17 +64,17 @@ class HashMap:
     @staticmethod
     def _enforce_valid_number_of_new_items(n: int):
         if not isinstance(n, int) or isinstance(n, bool):
-            raise TypeError(f"Inappropriate type '{get_class_name(n)}' "
+            raise TypeError(
+                f"Inappropriate type '{get_class_name(n)}' "
                 "for number of items. Should be 'int'."
-                )
+            )
         if n < 0:
             raise ValueError(f"Number of new items should be >= 0.")
 
     def _get_size_with_load_margin(self, n: int) -> int:
         self._enforce_valid_load_factor(self._load_factor)
         self._enforce_valid_number_of_new_items(n)
-        margin_ratio = 1 - self._load_factor
-        return n + int(margin_ratio * n)
+        return n * 2
 
     def _enforce_valid_map_size(self, map_size: int):
         if not isinstance(map_size, int) or isinstance(map_size, bool):
@@ -81,12 +85,17 @@ class HashMap:
         if map_size < (DMS := self._DEFAULT_MAP_SIZE):
             raise ValueError(f"Map size cannot be smaller than {DMS}.")
 
-    def _set_initial_map_size(self, map_size: int, number_of_new_items: int):
-        self._enforce_valid_map_size(map_size)
-        n = number_of_new_items if number_of_new_items > map_size else map_size
-        self._INITIAL_MAP_SIZE = self._get_size_with_load_margin(n)
+    def _set_initial_map_size(self, number_of_new_items: int = None):
+        if number_of_new_items is None:
+            self._INITIAL_MAP_SIZE = self._DEFAULT_MAP_SIZE
+        else:
+            n = self._get_size_with_load_margin(number_of_new_items)
+            map_size = (
+                n if n > self._DEFAULT_MAP_SIZE else self._DEFAULT_MAP_SIZE
+            )
+            self._INITIAL_MAP_SIZE = map_size
 
-    def _reset_list(self, map_size: int = None):
+    def _create_new_list(self, map_size: int = None):
         if map_size is not None:
             self._enforce_valid_map_size(map_size)
             n = map_size
@@ -95,30 +104,22 @@ class HashMap:
         self._list = [None for _ in range(n)]
         self._set_hash_ceiling(n)
 
-    def _create_new_list(
-        self, map_size: int, _iter: Union[Tuple, List, Dict] = None
+    def _initialize_new_list(
+        self, _iter: Iterable = None, map_size: int = None
     ):
-        if _iter is None:
-            self._reset_list(map_size)
-        elif isinstance(_iter, Iterable):
-            iter_length = len(_iter)
-            n = map_size if map_size > iter_length else iter_length 
-            self._reset_list(n)
+        self._create_new_list(map_size)
+        if _iter is not None:
             self.update(_iter)
-
-        else:
-            raise TypeError("Non-iterable object passed at HashMap creation.")
 
     def _calculate_new_map_size(self, number_of_new_items: int) -> int:
         n = number_of_new_items
-        doublecap = self._capacity * 2
-        size_with_margin = self._get_size_with_load_margin(n)
-        return doublecap if doublecap > size_with_margin else size_with_margin
+        self._enforce_valid_number_of_new_items(n)
+        return self._get_size_with_load_margin(self._size + n)
 
     def _resize_list(self, number_of_new_items: int):
         new_map_size = self._calculate_new_map_size(number_of_new_items)
-        self._hash_ceiling = new_map_size
-        self._create_new_list(new_map_size, self.items())
+        current_items = self.items()
+        self._initialize_new_list(current_items, new_map_size)
 
     def _is_resize_needed(self, number_of_new_items: int):
         new_size = self._size + number_of_new_items
@@ -127,6 +128,7 @@ class HashMap:
 
     def _manage_current_load(self, number_of_new_items: int = 1):
         n = number_of_new_items
+        self._enforce_valid_number_of_new_items(n)
         if self._is_resize_needed(n):
             self._resize_list(n)
 
@@ -254,7 +256,8 @@ class HashMap:
 
     def clear(self):
         """Removes all items from the hashmap."""
-        self._reset_list()
+        del self._list
+        self._create_new_list()
 
     @staticmethod
     def _salt(key) -> int:
