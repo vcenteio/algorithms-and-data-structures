@@ -32,3 +32,13 @@ ignore_missing_imports = "True"
 
 [tool.pylint.master]
 ignore-paths = "tests"
+
+[tool.pytest.ini_options]
+testpaths = [
+    "tests"
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "if __name__ == .__main__.:"
+]
