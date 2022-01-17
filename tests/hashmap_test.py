@@ -204,7 +204,7 @@ def test_set_hash_ceiling_correct_value(hm0: HashMap, value):
 
 @pytest.mark.parametrize(
     "wrong_map_size",
-    [1.2, True, HashMap, sorted, {i for i in range(20)}]
+    [1.2, True, HashMap, sorted, {i for i in range(5)}]
 )
 def test_create_new_list_wrong_map_size_type(hm0: HashMap, wrong_map_size):
     with pytest.raises(TypeError):
@@ -213,7 +213,7 @@ def test_create_new_list_wrong_map_size_type(hm0: HashMap, wrong_map_size):
 
 @pytest.mark.parametrize(
     "wrong_map_size",
-    [1, 0, -1, 9, -1000]
+    [1, 0, -10, 9]
 )
 def test_create_new_list_wrong_map_size_value(hm0: HashMap, wrong_map_size):
     with pytest.raises(ValueError):
@@ -224,7 +224,7 @@ def test_create_new_list_wrong_map_size_value(hm0: HashMap, wrong_map_size):
     "map_size",
     [11, 20, 1000]
 )
-def test_create_new_list_correct_iter_type(hm0: HashMap, map_size):
+def test_create_new_list_correct_map_size_type(hm0: HashMap, map_size):
     hm0._create_new_list(map_size)
     assert hm0._capacity == hm0._hash_ceiling == map_size
     assert hm0._size == len(hm0) == 0
@@ -259,21 +259,188 @@ def test_create_hashmap_from_dict(hm2: HashMap):
     assert hm2.items() == hm1_dict
 
 
-def test_load_factor():
-    with pytest.raises(TypeError):
-        HashMap(load_factor=2)
-    with pytest.raises(TypeError):
-        HashMap(load_factor="a")
-    with pytest.raises(TypeError):
-        HashMap(load_factor=True)
+@pytest.fixture
+def l0():
+    return []
 
-    with pytest.raises(ValueError):
-        HashMap(load_factor=7.4)
-    with pytest.raises(ValueError):
-        HashMap(load_factor=9.6)
 
-    hm1 = HashMap()
-    hm2 = HashMap(load_factor=0.80)
+@pytest.fixture
+def l10():
+    return [(i, i*2) for i in range(10)]
 
-    assert hm1._load_factor == 0.75
-    assert hm2._load_factor == 0.80
+
+@pytest.fixture
+def l20():
+    return [(i, i*2) for i in range(10, 30)]
+
+
+@pytest.fixture
+def d10():
+    return {i: i*2 for i in range(10)}
+
+
+@pytest.fixture
+def d20():
+    return {i: i*2 for i in range(10, 30)}
+
+
+def test_len(l10, l20, d10, d20):
+    hm = HashMap(l10)
+    assert len(hm) == sum((1 for _ in l10 if _ is not None)) 
+    hm = HashMap(l20)
+    assert len(hm) == sum((1 for _ in l20 if _ is not None))
+    hm = HashMap(d10)
+    assert len(hm) == sum((1 for _ in d10 if _ is not None))
+    hm = HashMap(d20)
+    assert len(hm) == sum((1 for _ in d20 if _ is not None))
+
+
+def test_capacity(l10, l20, d10, d20):
+    hm = HashMap(l10)
+    assert hm._capacity == len(l10) * 2
+    hm = HashMap(l20)
+    assert hm._capacity == len(l20) * 2
+    hm = HashMap(d10)
+    assert hm._capacity == len(d10) * 2
+    hm = HashMap(d20)
+    assert hm._capacity == len(d20) * 2
+
+def test_load(l10, l20, d10, d20):
+    hm = HashMap(l10)
+    assert hm._load == hm._size / (len(l10) * 2)
+    hm = HashMap(l20)
+    assert hm._load == hm._size / (len(l20) * 2)
+    hm = HashMap(d10)
+    assert hm._load == hm._size / (len(d10) * 2)
+    hm = HashMap(d20)
+    assert hm._load == hm._size / (len(d20) * 2)
+
+
+@pytest.mark.parametrize(
+    ("number_of_items", "expected"),
+    [
+        (0, False), (1, False), (5, False), (6, False), (8, True), (40, True)
+    ]
+)
+def test_is_resize_needed(hm0: HashMap, number_of_items, expected):
+    assert hm0._is_resize_needed(number_of_items) == expected
+
+
+@pytest.mark.parametrize(
+    ("number_of_items", "expected"),
+    [
+        (0, 0), (1, 2), (10, 20)
+    ]
+)
+def test_calculate_new_map_size(hm0: HashMap, number_of_items, expected):
+    assert hm0._calculate_new_map_size(number_of_items) == expected
+
+
+@pytest.fixture
+def hm4():
+    return HashMap([(i, i*2) for i in range(40)])
+
+
+@pytest.mark.parametrize(
+    ("key"),
+    [41, 42, 43, 500, 1100232]
+)
+def test_set_default_non_existent_key_no_default(hm4: HashMap, key):
+    assert hm4.setdefault(key) is None
+
+
+@pytest.mark.parametrize(
+    ("key", "default"),
+    [
+        (41, 2), (43, 4), ("a", "b"), (b"123", [5,9,6])
+    ]
+)
+def test_set_default_non_existent_key_with_default(hm4: HashMap, key, default):
+    assert hm4.setdefault(key, default) == default
+
+
+@pytest.mark.parametrize(
+    ("key", "value"),
+    [
+        (1, 2), (3, 6), (7, 14), (39, 78)
+    ]
+)
+def test_set_default_existing_key(hm4: HashMap, key, value):
+    assert hm4.setdefault(key, "default") == value 
+
+
+def test_items(hm0: HashMap, hm4: HashMap, d10: Dict, d20: Dict):
+    assert hm0.items() == {}
+    hm0.update(d10)
+    assert hm0.items() == d10
+    hm0.update(d20)
+    dtemp = d10.copy()
+    dtemp.update(d20)
+    assert hm0.items() == dtemp
+    assert hm4.items() == {i: i*2 for i in range(40)}
+
+
+def test_keys(hm0: HashMap, hm4: HashMap, d10: Dict, d20: Dict):
+    assert hm0.keys() == ()
+    hm0.update(d10)
+    assert set(hm0.keys()) == set(d10.keys())
+    hm0.update(d20)
+    dtemp = d10.copy()
+    dtemp.update(d20)
+    assert set(hm0.keys()) == set(dtemp.keys())
+    assert set(hm4.keys()) == set((i for i in range(40)))
+
+
+def test_values(hm0: HashMap, hm4: HashMap, d10: Dict, d20: Dict):
+    assert hm0.values() == ()
+    hm0.update(d10)
+    assert set(hm0.values()) == set(d10.values())
+    hm0.update(d20)
+    dtemp = d10.copy()
+    dtemp.update(d20)
+    assert set(hm0.values()) == set(dtemp.values())
+    assert set(hm4.values()) == set((i * 2 for i in range(40)))
+
+
+@pytest.mark.parametrize(
+    ("key", "expected"),
+    [
+        (1, 2), (10, 20), (39, 78)
+    ]
+)
+def test_get_existing_key(hm4: HashMap, key, expected):
+    assert hm4.get(key) == expected
+
+
+@pytest.mark.parametrize(
+    ("key", "default"),
+    [
+        (41, "default"), (100, b'123'), (76, bytearray((3, 2, 1)))
+    ]
+)
+def test_get_non_existing_key(hm4: HashMap, key, default):
+    assert hm4.get(key, default) == default
+    assert hm4.get(key) is None 
+
+
+@pytest.mark.parametrize(
+    ("key", "value"),
+    [
+        (1, 2), (10, 20), (39, 78), (20, 40), (15, 30)
+    ]
+)
+def test_pop(hm4: HashMap, key, value):
+    assert hm4.pop(key) == value
+    assert hm4.pop(key, "default") == "default"
+    with pytest.raises(KeyError):
+        hm4.pop(key)
+
+
+def test_clear(hm0: HashMap, hm4: HashMap):
+    l = hm0._list
+    hm0.clear()
+    assert hm0._list == l == [None for _ in range(hm0._DEFAULT_MAP_SIZE)]
+
+    l = hm4._list
+    hm4.clear()
+    assert hm4._list == [None for _ in range(hm4._INITIAL_MAP_SIZE)] != l

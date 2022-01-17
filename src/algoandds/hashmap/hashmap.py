@@ -122,7 +122,9 @@ class HashMap:
         self._initialize_new_list(current_items, new_map_size)
 
     def _is_resize_needed(self, number_of_new_items: int):
-        new_size = self._size + number_of_new_items
+        n = number_of_new_items
+        self._enforce_valid_number_of_new_items(n)
+        new_size = self._size + n
         new_load = new_size / self._capacity
         return new_load >= self._load_factor
 
@@ -242,7 +244,7 @@ class HashMap:
 
         If key does not exists in the hashmap,
         returns default value if one was given,
-        otherwise KeyError is raised.
+        otherwise raises KeyError.
         """
         item_to_pop = self.get(key)
         if item_to_pop is not None:
