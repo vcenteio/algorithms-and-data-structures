@@ -217,15 +217,15 @@ class HashMap:
 
     def items(self) -> Dict:
         """Returns a dictionary with all the key-value pairs of the hashmap."""
-        return {key: value for key, value in self}
+        return {key: self[key] for key in self}
 
     def keys(self) -> Tuple:
         """Returns a tuple with all the keys of the hashmap."""
-        return tuple((key for key, _ in self))
+        return tuple((key for key in self))
 
     def values(self) -> Tuple:
         """Returns a tuple with all the values of the hashmap."""
-        return tuple((value for _, value in self))
+        return tuple((self[key] for key in self))
 
     def get(self, key, default=None):
         """Returns the value for key if the latter exists in the hashmap,
@@ -350,12 +350,12 @@ class HashMap:
         for bucket in self._list:
             if isinstance(bucket, LinkedList):
                 for node in bucket:
-                    yield node
+                    yield node.data[0]
             elif isinstance(bucket, Tuple):
-                yield bucket
+                yield bucket[0]
 
     def __contains__(self, key) -> bool:
-        for existing_key, _ in self:
+        for existing_key in self:
             if existing_key == key:
                 return True
         return False
