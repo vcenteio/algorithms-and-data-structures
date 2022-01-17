@@ -21,7 +21,7 @@ def is_sorted(seq: Sequence) -> bool:
 
 
 def get_class_name(obj: Any) -> str:
-    return obj.__class__.__name__
+    return getattr(type(obj), '__name__')
 
 
 def generate_random_indexes(length: int) -> list:
