@@ -1,5 +1,6 @@
 ﻿from typing import Any, Callable, Hashable, Union, Iterable, Tuple, Dict, List
-from hashlib import sha1
+from hashlib import sha256
+from secrets import token_urlsafe
 
 from ..linkedlist import LinkedList
 from ..tools.tools import get_class_name
@@ -13,6 +14,7 @@ class HashMap:
         self, _iter: Union[Tuple, Dict, List] = None, load_factor: float = 0.75
     ):
         self._set_load_factor(load_factor)
+        self._generate_salt_secret()
         if _iter is None:
             self._set_initial_map_size()
             self._create_new_list()
@@ -82,8 +84,8 @@ class HashMap:
                 f"Inappropriate type '{get_class_name(map_size)}' "
                 "for map size. Should be 'int'."
             )
-        if map_size < (DMS := self._MINIMUM_MAP_SIZE):
-            raise ValueError(f"Map size cannot be smaller than {DMS}.")
+        if map_size < (MMS := self._MINIMUM_MAP_SIZE):
+            raise ValueError(f"Map size cannot be smaller than {MMS}.")
 
     def _set_initial_map_size(self, number_of_new_items: int = None):
         if number_of_new_items is None:
@@ -106,12 +108,13 @@ class HashMap:
 
     def _initialize_new_list(
         self,
-        _iter: Union[Tuple[Any, ...], Dict[Any, Any], List[Any]] = None,
+        items: Union[Tuple[Any, ...], Dict[Any, Any], List[Any]] = None,
         map_size: int = None,
     ):
+        self._generate_salt_secret()
         self._create_new_list(map_size)
-        if _iter is not None:
-            self.update(_iter)
+        if items is not None:
+            self.update(items)
 
     def _calculate_new_map_size(self, number_of_new_items: int) -> int:
         n = number_of_new_items
@@ -263,10 +266,13 @@ class HashMap:
         del self._list
         self._create_new_list()
 
-    @staticmethod
-    def _salt(key) -> int:
+    def _generate_salt_secret(self):
+        self._ss = token_urlsafe(16)
+
+    def _salt(self, key) -> int:
         encoded_key = key.encode() if isinstance(key, str) else bytes(key)
-        return sum(sha1(encoded_key, usedforsecurity=True).digest())
+        hash_key_sum = sum(sha256(encoded_key, usedforsecurity=True).digest())
+        return hash_key_sum + hash(self._ss)
 
     def _prehash(self, key):
         return abs(hash(key) + self._salt(key))

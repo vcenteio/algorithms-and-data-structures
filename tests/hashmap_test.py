@@ -572,3 +572,13 @@ def test_str_repr(hm: HashMap):
     items = hm.items()
     assert repr(hm) == f"<HashMap: {l}>"
     assert str(hm) == str(items)
+
+
+@pytest.mark.parametrize(
+    "rng",
+    [range(10), range(10, 20), range(20, 40), range(40, 100), range(100, 10000)]
+)
+def test_integrity_on_increasing_load(hm0: HashMap, rng: range):
+    hm0.update({i: i * 2 for i in rng})
+    for i in rng:
+        assert hm0[i] == i * 2
