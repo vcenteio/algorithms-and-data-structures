@@ -6,7 +6,7 @@ from ..tools.tools import get_class_name
 
 
 class HashMap:
-    _DEFAULT_MAP_SIZE = 10
+    _MINIMUM_MAP_SIZE = 10
     _DEFAULT_LOAD_FACTOR = 0.75
 
     def __init__(
@@ -82,16 +82,16 @@ class HashMap:
                 f"Inappropriate type '{get_class_name(map_size)}' "
                 "for map size. Should be 'int'."
             )
-        if map_size < (DMS := self._DEFAULT_MAP_SIZE):
+        if map_size < (DMS := self._MINIMUM_MAP_SIZE):
             raise ValueError(f"Map size cannot be smaller than {DMS}.")
 
     def _set_initial_map_size(self, number_of_new_items: int = None):
         if number_of_new_items is None:
-            self._INITIAL_MAP_SIZE = self._DEFAULT_MAP_SIZE
+            self._INITIAL_MAP_SIZE = self._MINIMUM_MAP_SIZE
         else:
             n = self._get_size_with_load_margin(number_of_new_items)
             map_size = (
-                n if n > self._DEFAULT_MAP_SIZE else self._DEFAULT_MAP_SIZE
+                n if n > self._MINIMUM_MAP_SIZE else self._MINIMUM_MAP_SIZE
             )
             self._INITIAL_MAP_SIZE = map_size
 

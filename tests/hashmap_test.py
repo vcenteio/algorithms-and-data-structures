@@ -213,9 +213,9 @@ def test_create_new_list_no_arguments(hm0: HashMap):
 
 
 def test_create_hashmap_with_no_items(hm0: HashMap):
-    assert hm0._list == [None for _ in range(HashMap._DEFAULT_MAP_SIZE)]
+    assert hm0._list == [None for _ in range(HashMap._MINIMUM_MAP_SIZE)]
     assert hm0._load_factor == HashMap._DEFAULT_LOAD_FACTOR
-    assert hm0._capacity == HashMap._DEFAULT_MAP_SIZE
+    assert hm0._capacity == HashMap._MINIMUM_MAP_SIZE
     assert hm0._size == len(hm0) == 0
 
 
@@ -398,7 +398,7 @@ def test_pop(hm4: HashMap, key, value):
 def test_clear(hm0: HashMap, hm4: HashMap):
     l = hm0._list
     hm0.clear()
-    assert hm0._list == l == [None for _ in range(hm0._DEFAULT_MAP_SIZE)]
+    assert hm0._list == l == [None for _ in range(hm0._MINIMUM_MAP_SIZE)]
 
     l = hm4._list
     hm4.clear()
