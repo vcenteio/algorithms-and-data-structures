@@ -1,4 +1,4 @@
-﻿from typing import Callable, Hashable, Type, Union, Iterable, Tuple, Dict, List
+﻿from typing import Any, Callable, Hashable, Union, Iterable, Tuple, Dict, List
 from hashlib import sha1
 
 from ..linkedlist import LinkedList
@@ -69,7 +69,7 @@ class HashMap:
                 "for number of items. Should be 'int'."
             )
         if n < 0:
-            raise ValueError(f"Number of new items should be >= 0.")
+            raise ValueError("Number of new items should be >= 0.")
 
     def _get_size_with_load_margin(self, n: int) -> int:
         self._enforce_valid_load_factor(self._load_factor)
@@ -105,7 +105,9 @@ class HashMap:
         self._set_hash_ceiling(n)
 
     def _initialize_new_list(
-        self, _iter: Iterable = None, map_size: int = None
+        self,
+        _iter: Union[Tuple[Any, ...], Dict[Any, Any], List[Any]] = None,
+        map_size: int = None,
     ):
         self._create_new_list(map_size)
         if _iter is not None:
@@ -139,7 +141,7 @@ class HashMap:
         return len(t) == 2
 
     def _add_from_tuple(self, t: Tuple):
-        if not isinstance(t, Tuple):
+        if not isinstance(t, Tuple):  # type: ignore
             raise TypeError(
                 "Requested update from tuple with non-tuple type object."
             )
@@ -160,21 +162,21 @@ class HashMap:
             self[key] = d[key]
 
     @staticmethod
-    def _is_valid_list(l: List) -> bool:
+    def _is_valid_list(_list: List) -> bool:
         try:
-            [(key, value) for (key, value) in l]
+            [(key, value) for (key, value) in _list]
             return True
         except (TypeError, ValueError):
             return False
 
-    def _add_from_list(self, l: List):
-        if not isinstance(l, List):
+    def _add_from_list(self, _list: List):
+        if not isinstance(_list, List):
             raise TypeError(
                 "Requested update from list with non-list type object."
             )
-        if self._is_valid_list(l):
-            self._manage_current_load(len(l))
-            for (key, value) in l:
+        if self._is_valid_list(_list):
+            self._manage_current_load(len(_list))
+            for (key, value) in _list:
                 self[key] = value
         else:
             raise ValueError("List items should be key-value pair iterables.")
@@ -192,8 +194,8 @@ class HashMap:
                 "a list of tuples with key-value pairs "
                 "or a dict."
             )
-        if isinstance(_iterable, Tuple):
-            self._add_from_tuple(_iterable)
+        if isinstance(_iterable, Tuple):  # type: ignore
+            self._add_from_tuple(_iterable)  # type: ignore
         elif isinstance(_iterable, Dict):
             self._add_from_dict(_iterable)
         elif isinstance(_iterable, List):
@@ -278,8 +280,8 @@ class HashMap:
                 f"Key be {get_class_name(key)} type. "
                 "Must be hashable and cannot be a tuple or NoneType."
             )
-        # Since None is always hashable, for the sake of correctness,
-        # I consider it a ValueError.
+        # None is hashable, but it's not considered a correct value
+        # for this implementation.
         if key is None:
             raise ValueError(f"Key cannot be {get_class_name(key)}.")
         return self._prehash(key) % self._hash_ceiling
@@ -337,12 +339,15 @@ class HashMap:
         if bucket is None:
             raise KeyError("Mapping key not found.")
         if isinstance(bucket, tuple):
-            _, self._list[hash_code] = bucket, None
-            del _
+            if bucket[0] == key:
+                _, self._list[hash_code] = bucket, None
+                del _
+            else:
+                raise KeyError("Mapping key not found.")
         elif isinstance(bucket, LinkedList):
             bucket: LinkedList
             index = self._get_from_linked_list(key, bucket)
-            if index is None:
+            if index is None or bucket[index][0] != key:
                 raise KeyError("Mapping key not found.")
             else:
                 _ = bucket.pop(index)
