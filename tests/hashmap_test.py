@@ -1,7 +1,9 @@
 ﻿from typing import Dict, Iterable, List
 from secrets import randbelow
+from itertools import count
 import pytest
 
+from src.algoandds.linkedlist import LinkedList
 from src.algoandds.hashmap import HashMap
 
 
@@ -491,6 +493,24 @@ def test_delitem_existing_key(hm4: HashMap):
             assert hmt._capacity < previous_capacity
         with pytest.raises(KeyError):
             hmt[k]
+
+
+@pytest.mark.parametrize(
+    "hm",
+    [
+        HashMap({chr(i): i for i in range(2000)}),
+        HashMap([(i, bytes(i)) for i in range(2000)]),
+    ],
+)
+def test_delitem_ensure_empty_bucket_is_none(hm: HashMap):
+    keys = hm.keys()
+    # Delete all items.
+    for k in keys:
+        del hm[k]
+    assert hm._size == len(hm) == 0
+    # Make sure every bucket is None.
+    for bucket in hm._list:
+        assert bucket is None
 
 
 @pytest.mark.parametrize(

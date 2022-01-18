@@ -365,7 +365,6 @@ class HashMap:
             if bucket[0] == key:
                 _, self._list[hash_code] = bucket, None
                 del _
-                self._manage_current_load()
             else:
                 raise KeyError("Mapping key not found.")
         elif isinstance(bucket, LinkedList):
@@ -376,7 +375,10 @@ class HashMap:
             else:
                 _ = bucket.pop(index)
                 del _
-                self._manage_current_load()
+                if bucket.is_empty():
+                    del bucket
+                    self._list[hash_code] = None
+        self._manage_current_load()
 
     def __iter__(self):
         for bucket in self._list:
