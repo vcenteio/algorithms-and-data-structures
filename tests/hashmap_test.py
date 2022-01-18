@@ -582,3 +582,16 @@ def test_integrity_on_increasing_load(hm0: HashMap, rng: range):
     hm0.update({i: i * 2 for i in rng})
     for i in rng:
         assert hm0[i] == i * 2
+
+
+@pytest.mark.parametrize(
+    "hm",
+    [
+        HashMap(),
+        HashMap((1, "a")),
+        HashMap({chr(i): i for i in range(2000)}),
+        HashMap([(i, bytes(i)) for i in range(2000)]),
+    ],
+)
+def test_copy(hm: HashMap):
+    assert set(hm) == set(hm.copy())

@@ -266,6 +266,10 @@ class HashMap:
         del self._list
         self._create_new_list()
 
+    def copy(self) -> "HashMap":
+        """Returns a shallow copy of the hashmap."""
+        return HashMap(self.items())
+
     def _generate_salt_secret(self):
         self._ss = token_urlsafe(16)
 
