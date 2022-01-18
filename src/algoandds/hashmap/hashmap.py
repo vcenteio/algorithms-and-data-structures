@@ -14,7 +14,6 @@ class HashMap:
         self, _iter: Union[Tuple, Dict, List] = None, load_factor: float = 0.75
     ):
         self._set_load_factor(load_factor)
-        self._generate_salt_secret()
         if _iter is None:
             self._set_initial_map_size()
             self._create_new_list()
@@ -44,6 +43,11 @@ class HashMap:
             raise ValueError("Invalid hash ceiling value.")
 
     def _set_hash_ceiling(self, ceiling: int):
+        # Although the hash_ceiling is always equal
+        # to the object's capacity, its value is stored
+        # at each map sizing/resizing operation
+        # in order to prevent it to be calculated
+        # at every _hash call, thus reducing access time.
         self._enforce_valid_hash_ceiling(ceiling)
         self._hash_ceiling = ceiling
 
@@ -105,13 +109,13 @@ class HashMap:
             n = self._INITIAL_MAP_SIZE
         self._list = [None for _ in range(n)]
         self._set_hash_ceiling(n)
+        self._generate_salt_secret()
 
     def _initialize_new_list(
         self,
         items: Union[Tuple[Any, ...], Dict[Any, Any], List[Any]] = None,
         map_size: int = None,
     ):
-        self._generate_salt_secret()
         self._create_new_list(map_size)
         if items is not None:
             self.update(items)
@@ -119,21 +123,30 @@ class HashMap:
     def _calculate_new_map_size(self, number_of_new_items: int) -> int:
         n = number_of_new_items
         self._enforce_valid_number_of_new_items(n)
-        return self._get_size_with_load_margin(self._size + n)
+        MMS = self._MINIMUM_MAP_SIZE
+        size_with_margin = self._get_size_with_load_margin(self._size + n)
+        return size_with_margin if size_with_margin > MMS else MMS
 
     def _resize_list(self, number_of_new_items: int):
         new_map_size = self._calculate_new_map_size(number_of_new_items)
-        current_items = self.items()
+        current_items = self.items() if self.items() else None
         self._initialize_new_list(current_items, new_map_size)
 
-    def _is_resize_needed(self, number_of_new_items: int):
+    def _is_load_high(self, load: int) -> bool:
+        return load >= self._load_factor
+
+    def _is_load_low(self, load: int) -> bool:
+        load_is_low = load < 1 - self._load_factor
+        map_is_not_on_initial_state = self._capacity != self._INITIAL_MAP_SIZE
+        return load_is_low and map_is_not_on_initial_state
+
+    def _is_resize_needed(self, number_of_new_items: int = 0):
         n = number_of_new_items
-        self._enforce_valid_number_of_new_items(n)
         new_size = self._size + n
         new_load = new_size / self._capacity
-        return new_load >= self._load_factor
+        return self._is_load_high(new_load) or self._is_load_low(new_load)
 
-    def _manage_current_load(self, number_of_new_items: int = 1):
+    def _manage_current_load(self, number_of_new_items: int = 0):
         n = number_of_new_items
         self._enforce_valid_number_of_new_items(n)
         if self._is_resize_needed(n):
@@ -149,7 +162,7 @@ class HashMap:
                 "Requested update from tuple with non-tuple type object."
             )
         if self._is_valid_tuple(t):
-            self._manage_current_load()
+            self._manage_current_load(number_of_new_items=1)
             key, value = t
             self[key] = value
         else:
@@ -160,7 +173,7 @@ class HashMap:
             raise TypeError(
                 "Requested update from dict with non-dict type object."
             )
-        self._manage_current_load(len(d))
+        self._manage_current_load(number_of_new_items=len(d))
         for key in d:
             self[key] = d[key]
 
@@ -178,7 +191,7 @@ class HashMap:
                 "Requested update from list with non-list type object."
             )
         if self._is_valid_list(_list):
-            self._manage_current_load(len(_list))
+            self._manage_current_load(number_of_new_items=len(_list))
             for (key, value) in _list:
                 self[key] = value
         else:
@@ -352,6 +365,7 @@ class HashMap:
             if bucket[0] == key:
                 _, self._list[hash_code] = bucket, None
                 del _
+                self._manage_current_load()
             else:
                 raise KeyError("Mapping key not found.")
         elif isinstance(bucket, LinkedList):
@@ -362,6 +376,7 @@ class HashMap:
             else:
                 _ = bucket.pop(index)
                 del _
+                self._manage_current_load()
 
     def __iter__(self):
         for bucket in self._list:

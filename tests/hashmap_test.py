@@ -310,7 +310,7 @@ def test_is_resize_needed(hm0: HashMap, number_of_items, expected):
 
 
 @pytest.mark.parametrize(
-    ("number_of_items", "expected"), [(0, 0), (1, 2), (10, 20)]
+    ("number_of_items", "expected"), [(0, 10), (1, 10), (10, 20)]
 )
 def test_calculate_new_map_size(hm0: HashMap, number_of_items, expected):
     assert hm0._calculate_new_map_size(number_of_items) == expected
@@ -478,11 +478,17 @@ def test_delitem_existing_key(hm4: HashMap):
         del hm4[k]
         with pytest.raises(KeyError):
             hm4[k]
-
-    keys = [i for i in range(1, 30000)]
+    # Test item deletion and map resizing when
+    # load gets too low.
+    keys = [i for i in range(1, 3000)]
     hmt = HashMap({key: key * 5 for key in keys})
     for k in keys:
+        previous_capacity = (
+            hmt._capacity if hmt._is_resize_needed(-1) else None
+        )
         del hmt[k]
+        if previous_capacity is not None:
+            assert hmt._capacity < previous_capacity
         with pytest.raises(KeyError):
             hmt[k]
 
@@ -576,7 +582,13 @@ def test_str_repr(hm: HashMap):
 
 @pytest.mark.parametrize(
     "rng",
-    [range(10), range(10, 20), range(20, 40), range(40, 100), range(100, 10000)]
+    [
+        range(10),
+        range(10, 20),
+        range(20, 40),
+        range(40, 100),
+        range(100, 10000),
+    ],
 )
 def test_integrity_on_increasing_load(hm0: HashMap, rng: range):
     hm0.update({i: i * 2 for i in rng})
