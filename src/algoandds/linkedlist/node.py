@@ -1,21 +1,8 @@
-﻿from typing import Hashable, Union
-from abc import ABC, abstractmethod
+﻿from typing import Any, Hashable, Iterator, Union
+from collections.abc import Iterable
 
+from .inodeabc import INode
 from ..tools.tools import get_class_name
-
-
-class INode(ABC):
-    data: Hashable = None
-    _next: Union["INode", None] = None
-
-    @property
-    @abstractmethod
-    def next_node(self) -> Union["INode", None]:
-        ...
-
-    @abstractmethod
-    def set_next_node(self, next_node: Union["INode", None]):
-        ...
 
 
 class Node(INode):
@@ -27,11 +14,14 @@ class Node(INode):
             )
         self.data = data
 
-    def __getitem__(self, key: int):
+    def __getitem__(self, key: int) -> Any:
         return self.data[key]  # type: ignore[index]
 
-    def __iter__(self):
-        return iter(self.data)
+    def __iter__(self) -> Iterator:
+        if isinstance(self.data, Iterable):
+            return iter(self.data)
+        else:
+            raise TypeError("Node data is not iterable.")
 
     def __repr__(self) -> str:
         return f"Node({self.data})"
