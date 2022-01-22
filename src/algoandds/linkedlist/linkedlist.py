@@ -1,21 +1,14 @@
-﻿from typing import Any, Iterable
-from typing import MutableSequence, Union, Tuple
+﻿from typing import Any, Union, Tuple
+from collections.abc import MutableSequence, Iterable
 
-try:
-    from .node import INode, Node
-except ImportError:
-    from node import INode, Node
-try:
-    from ..tools.tools import get_class_name
-except ImportError:
-    import sys
-    import os
-    sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../")
-    from tools.tools import get_class_name
+from .node import INode, Node
+from ..tools.tools import get_class_name
 
 
 class LinkedList(MutableSequence):
-    def __init__(self, head: Any = None, node_type: INode = Node):
+    head: Union[INode, None]
+
+    def __init__(self, head: Any = None, node_type=Node):
         self._set_node_type(node_type)
         self._i = None
         if isinstance(head, Iterable) and not isinstance(head, (str, bytes)):
@@ -26,7 +19,7 @@ class LinkedList(MutableSequence):
         elif head:
             self.head = node_type(head)
 
-    def _set_node_type(self, node_type: INode) -> None:
+    def _set_node_type(self, node_type) -> None:
         if not issubclass(node_type, INode):
             raise TypeError(f"Invalid node type ({type(node_type)}).")
         self._node_type = node_type
@@ -77,7 +70,7 @@ class LinkedList(MutableSequence):
         new_node.set_next_node(self.head)
         self.head = new_node
 
-    def insert(self, new_item: Any, index=0) -> None:
+    def insert(self, index: int, value: Any) -> None:
         if not isinstance(index, int) or isinstance(index, bool):
             raise TypeError(
                 f"Index type should be an int, not {type(index).__name__}."
@@ -88,9 +81,9 @@ class LinkedList(MutableSequence):
         if index > self.size:
             raise IndexError(f"Sequence index {index} out of range.")
         if index == 0:
-            self.prepend(new_item)
+            self.prepend(value)
         else:
-            new_node = self._create_new_node(new_item)
+            new_node = self._create_new_node(value)
             node_before = self[index-1]
             new_node.set_next_node(node_before.next_node)
             node_before.set_next_node(new_node)
@@ -141,13 +134,11 @@ class LinkedList(MutableSequence):
             item_to_remove = self._remove_by_index(index)
         return item_to_remove
 
-    def remove(self, item: Any) -> int:
+    def remove(self, item: Any) -> None:
         current = self.head
-        count = 0
         while self.head and current:
             if self.head.data == item:
                 self.head = self.head.next_node
-                count += 1
             else:
                 previous = self.head
                 current = self.head.next_node
@@ -155,11 +146,9 @@ class LinkedList(MutableSequence):
                     if current.data == item:
                         previous.set_next_node(current.next_node)
                         current = current.next_node
-                        count += 1
                     else:
                         previous = current
                         current = current.next_node
-        return count
 
     def copy(self, _from=0, _until=None) -> "LinkedList":
         new_list = LinkedList()
@@ -198,10 +187,10 @@ class LinkedList(MutableSequence):
         n = self.size
         if n < 2:
             return self
-        elif n == 2:
-            if self.head > self.head.next_node:
-                a, b = self.head.next_node.data, self.head.data
-                self.head.data, self.head.next_node.data = a, b
+        elif n == 2 and self.head is not None:
+            if self.head > self.head._next and self.head._next is not None:
+                a, b = self.head._next.data, self.head.data
+                self.head.data, self.head._next.data = a, b
             return self
         else:
             left_half, right_half = self.split()
@@ -214,21 +203,21 @@ class LinkedList(MutableSequence):
                 while current_A and current_B:
                     if current_A <= current_B:
                         new_list.append(current_A)
-                        current_A = current_A.next_node
+                        current_A = current_A._next
                     else:
                         new_list.append(current_B)
-                        current_B = current_B.next_node
+                        current_B = current_B._next
                 while current_A:
                     new_list.append(current_A)
-                    current_A = current_A.next_node
+                    current_A = current_A._next
                 while current_B:
                     new_list.append(current_B)
-                    current_B = current_B.next_node
+                    current_B = current_B._next
             self.clear()
             current = new_list.head
             while current:
                 self.append(current)
-                current = current.next_node
+                current = current._next
             del new_list
             return self
 
@@ -293,7 +282,7 @@ class LinkedList(MutableSequence):
     def __bool__(self) -> bool:
         return self.size != 0
 
-    def _get_item(self, index: int, start_node: INode = None) -> INode:
+    def _get_item(self, index: int, start_node: INode = None):
         if self.is_empty():
             raise IndexError("Cannot get item from empty list.")
         n = self.size
@@ -303,7 +292,7 @@ class LinkedList(MutableSequence):
             index += n
         current = start_node if start_node else self.head
         count = 0
-        while count < index:
+        while count < index and current is not None:
             count += 1
             current = current.next_node
         return current
