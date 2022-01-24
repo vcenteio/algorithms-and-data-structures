@@ -1,4 +1,4 @@
-﻿from typing import Any, Callable, Hashable, Union, Iterable, Tuple, Dict, List
+from typing import Any, Callable, Hashable, Union, Iterable, Tuple, Dict, List
 from hashlib import sha256
 from secrets import token_urlsafe
 
@@ -310,7 +310,8 @@ class HashMap:
         return self._prehash(key) % self._hash_ceiling
 
     def __getitem__(self, key):
-        bucket = self._list[self._hash(key)]
+        hash_code = self._hash(key)
+        bucket = self._list[hash_code]
         if bucket is None:
             raise KeyError("Mapping key not found.")
         if isinstance(bucket, tuple):
@@ -318,7 +319,8 @@ class HashMap:
                 return bucket[1]
             raise KeyError("Mapping key not found.")
         if isinstance(bucket, LinkedList):
-            for existing_key, value in bucket:
+            for node in bucket:
+                existing_key, value = node.data
                 if existing_key == key:
                     return value
             raise KeyError("Mapping key not found.")
@@ -330,7 +332,8 @@ class HashMap:
     @staticmethod
     def _get_from_linked_list(key, linked_list):
         index = 0
-        for existing_key, _ in linked_list:
+        for node in linked_list:
+            existing_key, _ = node.data
             if existing_key == key:
                 return index
             index += 1
@@ -370,7 +373,7 @@ class HashMap:
         elif isinstance(bucket, LinkedList):
             bucket: LinkedList
             index = self._get_from_linked_list(key, bucket)
-            if index is None or bucket[index][0] != key:
+            if index is None or bucket[index].data[0] != key:
                 raise KeyError("Mapping key not found.")
             else:
                 _ = bucket.pop(index)
