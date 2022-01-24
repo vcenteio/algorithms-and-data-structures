@@ -29,6 +29,7 @@ line-length = 79
 
 [tool.mypy]
 ignore_missing_imports = "True"
+show_error_codes = "True"
 
 [tool.pylint.master]
 ignore-paths = "tests"
