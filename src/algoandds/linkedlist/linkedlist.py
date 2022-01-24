@@ -1,4 +1,4 @@
-import sys
+﻿import sys
 from typing import Any, Union, Tuple, overload
 from collections.abc import MutableSequence, Iterable
 
@@ -89,9 +89,8 @@ class LinkedList(MutableSequence):
             new_node.set_next_node(node_before.next_node)
             node_before.set_next_node(new_node)
 
-    def extend(self, new_item) -> "LinkedList":
-        self += new_item
-        return self
+    def extend(self, values) -> None:
+        self += values
 
     def search(self, item: Any) -> Union[int, None]:
         current = self.head
@@ -103,10 +102,10 @@ class LinkedList(MutableSequence):
             index += 1
         return None
 
-    def index(self, item: Any) -> int:
-        index = self.search(item)
-        if index is None:
-            raise ValueError(f"{item} is not in linked list.")
+    def index(self, value: Any, start=0, stop=sys.maxsize) -> int:
+        index = self.search(value)
+        if index is None or index < start or index > stop:
+            raise ValueError(f"{value} is not in linked list.")
         return index
 
     def _pop_head(self):
@@ -301,16 +300,12 @@ class LinkedList(MutableSequence):
         return current
 
     def __getitem__(self, index: Union[int, slice]):
-        if not isinstance(index, (int, slice)):
-            raise TypeError(
-                f"Index should be an int or a slice object, not {type(index)}."
-            )
-        if isinstance(index, int):
+        if isinstance(index, int) and not isinstance(index, bool):
             return self._get_item(index)
         elif isinstance(index, slice):
             start, stop, step = index.indices(self.size)
             if step < 1:
-                raise ValueError("Negative step value is not supported.")
+                raise ValueError("Step value must be >= 1.")
             current = self._get_item(start)
             new_list = LinkedList(self._create_new_node(current))
             count = start + step
@@ -319,6 +314,11 @@ class LinkedList(MutableSequence):
                 current = self._get_item(step, current)
                 new_list.append(self._create_new_node(current))
             return new_list
+        else:
+            raise TypeError(
+                "Index should be an int or a slice object, "
+                f"not {get_class_name(index)}."
+            )
 
     @overload
     def __setitem__(self, index: int, value: Any) -> None:
@@ -351,11 +351,11 @@ class LinkedList(MutableSequence):
                     i += 1
             else:
                 len_of_current_items = len(self[index])
-                len_of_items_to_be_inserted = len(value)
-                if len_of_current_items != len_of_items_to_be_inserted:
+                len_of_new_items = len(value)  # type: ignore[arg-type]
+                if len_of_current_items != len_of_new_items:
                     raise ValueError(
                         "Attempt to assign sequence of size "
-                        f"{len_of_items_to_be_inserted} "
+                        f"{len_of_new_items} "
                         f"to extended slice of size {len_of_current_items}."
                     )
                 i = start
@@ -367,11 +367,29 @@ class LinkedList(MutableSequence):
                 f"Wrong type for index: {get_class_name(index)}."
             )
 
-    def __delitem__(self, index: int) -> None:
-        if not isinstance(index, int):
-            raise ValueError("Only indexes of type int are allowed.")
-        item_to_remove = self.pop(index)
-        del item_to_remove
+    def _get_indices_from_slice(self, sl: slice):
+        start, stop, step = sl.indices(len(self))
+        if step < 0:
+            raise NotImplementedError(
+                "Negative sequence indexes are not yet implemented."
+            )
+        return tuple(range(start, stop, step))
+
+    def __delitem__(self, index: Union[int, slice]) -> None:
+        if isinstance(index, int):
+            self.pop(index)
+        elif isinstance(index, slice):
+            indices = self._get_indices_from_slice(index)
+            print("DEBUG indices:", indices)
+            counter = 0
+            for i in indices:
+                i -= counter
+                self.pop(i)
+                counter += 1
+        else:
+            raise TypeError(
+                f"Wrong type for index: {get_class_name(index)}."
+            )
 
     def _generator(self):
         current = self.head
