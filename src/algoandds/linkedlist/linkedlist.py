@@ -1,4 +1,5 @@
-﻿from typing import Any, Union, Tuple
+import sys
+from typing import Any, Union, Tuple, overload
 from collections.abc import MutableSequence, Iterable
 
 from .node import INode, Node
@@ -11,11 +12,11 @@ class LinkedList(MutableSequence):
     def __init__(self, head: Any = None, node_type=Node):
         self._set_node_type(node_type)
         self._i = None
-        if isinstance(head, Iterable) and not isinstance(head, (str, bytes)):
+        if isinstance(head, INode) or head is None:
+            self.head = head
+        elif isinstance(head, Iterable) and not isinstance(head, (str, bytes)):
             self.head = None
             self._add_from_iterable(head)
-        elif isinstance(head, INode) or head is None:
-            self.head = head
         elif head:
             self.head = node_type(head)
 
@@ -221,7 +222,7 @@ class LinkedList(MutableSequence):
             del new_list
             return self
 
-    def _add_from_iterable(self, other):
+    def _add_from_iterable(self, other: Iterable):
         if isinstance(other, Iterable) and \
                 not isinstance(other, (str, bytes)):
             for i in other:
@@ -286,6 +287,8 @@ class LinkedList(MutableSequence):
         if self.is_empty():
             raise IndexError("Cannot get item from empty list.")
         n = self.size
+        # index + n is considered to accomodate for
+        # negative index values.
         if index >= n or index + n < 0:
             raise IndexError(f"Sequence index {index} out of range.")
         if index < 0:
@@ -317,9 +320,52 @@ class LinkedList(MutableSequence):
                 new_list.append(self._create_new_node(current))
             return new_list
 
+    @overload
     def __setitem__(self, index: int, value: Any) -> None:
-        item = self.__getitem__(index)
-        item.data = self._create_new_node(value)
+        ...
+
+    @overload
+    def __setitem__(self, index: slice, value: Iterable[Any]) -> None:
+        ...
+
+    def __setitem__(self, index, value) -> None:
+        if isinstance(index, int):
+            item = self.__getitem__(index)
+            item.data = value
+        elif isinstance(index, slice):
+            if not isinstance(value, Iterable):
+                raise TypeError("Can only assign an iterable.")
+            start, stop, step = index.indices(self.size)
+            if step < 0:
+                raise NotImplementedError(
+                    "Negative sequence indexes are not yet implemented."
+                )
+            if step == 1:
+                i = start
+                while i < stop:
+                    self.pop(start)
+                    i += 1
+                i = start
+                for item in value:
+                    self.insert(i, item)
+                    i += 1
+            else:
+                len_of_current_items = len(self[index])
+                len_of_items_to_be_inserted = len(value)
+                if len_of_current_items != len_of_items_to_be_inserted:
+                    raise ValueError(
+                        "Attempt to assign sequence of size "
+                        f"{len_of_items_to_be_inserted} "
+                        f"to extended slice of size {len_of_current_items}."
+                    )
+                i = start
+                for item in value:
+                    self[i] = item
+                    i += step
+        else:
+            raise TypeError(
+                f"Wrong type for index: {get_class_name(index)}."
+            )
 
     def __delitem__(self, index: int) -> None:
         if not isinstance(index, int):
