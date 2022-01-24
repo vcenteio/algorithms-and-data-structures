@@ -14,15 +14,6 @@ class Node(INode):
             )
         self.data = data
 
-    def __getitem__(self, key: int) -> Any:
-        return self.data[key]  # type: ignore[index]
-
-    def __iter__(self) -> Iterator:
-        if isinstance(self.data, Iterable):
-            return iter(self.data)
-        else:
-            raise TypeError("Node data is not iterable.")
-
     def __repr__(self) -> str:
         return f"Node({self.data})"
 

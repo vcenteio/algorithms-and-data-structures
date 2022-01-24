@@ -16,14 +16,6 @@ class INode(ABC):
         ...
 
     @abstractmethod
-    def __getitem__(self, key: int) -> Any:
-        ...
-
-    @abstractmethod
-    def __iter__(self) -> Iterator:
-        ...
-
-    @abstractmethod
     def __repr__(self) -> str:
         ...
 
