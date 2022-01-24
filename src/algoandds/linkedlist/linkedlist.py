@@ -1,4 +1,4 @@
-﻿import sys
+import sys
 from typing import Any, Union, Tuple, overload
 from collections.abc import MutableSequence, Iterable
 
@@ -36,8 +36,7 @@ class LinkedList(MutableSequence):
 
     @property
     def tail(self):
-        current = self.head
-        tail = current
+        tail = current = self.head
         while current:
             tail = current
             current = current.next_node
@@ -221,28 +220,30 @@ class LinkedList(MutableSequence):
             del new_list
             return self
 
+    @staticmethod
+    def _is_valid_iterable(itr: Any) -> bool:
+        return isinstance(itr, Iterable) and not isinstance(itr, (str, bytes))
+
     def _add_from_iterable(self, other: Iterable):
-        if isinstance(other, Iterable) and \
-                not isinstance(other, (str, bytes)):
+        if self._is_valid_iterable(other):
             for i in other:
                 self.append(i)
 
-    def _add(self, other: Any):
-        if isinstance(other, Iterable) and \
-                not isinstance(other, (str, bytes)):
+    def _add_item(self, other: Any):
+        if self._is_valid_iterable(other):
             self._add_from_iterable(other)
         else:
             self.append(other)
         return self
 
     def __add__(self, other: Any):
-        return self.copy()._add(other)
+        return self.copy()._add_item(other)
 
     def __radd__(self, other: Any):
-        return self.copy()._add(other)
+        return self.copy()._add_item(other)
 
     def __iadd__(self, other: Any):
-        return self._add(other)
+        return self._add_item(other)
 
     def _multiply(self, value: int):
         if not isinstance(value, int):
