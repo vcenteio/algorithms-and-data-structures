@@ -1,5 +1,5 @@
 import sys
-from typing import Any, Union, Tuple, overload
+from typing import Any, Union, Tuple, Optional, overload
 from collections.abc import MutableSequence, Iterable
 
 from .node import INode, Node
@@ -7,15 +7,15 @@ from ..tools.tools import get_class_name
 
 
 class LinkedList(MutableSequence):
-    head: Union[INode, None]
+    head: Optional[INode]
 
     def __init__(self, head: Any = None, node_type=Node):
         self._set_node_type(node_type)
         self._i = None
+        self.head = None
         if isinstance(head, INode) or head is None:
             self.head = head
-        elif isinstance(head, Iterable) and not isinstance(head, (str, bytes)):
-            self.head = None
+        elif self._is_valid_iterable(head):
             self._add_from_iterable(head)
         elif head:
             self.head = node_type(head)
