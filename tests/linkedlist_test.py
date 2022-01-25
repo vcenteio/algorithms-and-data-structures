@@ -37,7 +37,7 @@ def test_linked_list_is_empty(l0: LinkedList, l1: LinkedList):
 
 
 def test_linked_list_tail(l0: LinkedList, l1: LinkedList):
-    assert l0.tail == None
+    assert l0.tail is None
     assert l1.tail == 1
     l1.tail.set_next_node(l1._create_new_node(2))
     assert l1.tail == 2
@@ -59,7 +59,7 @@ def test_linked_list_append_non_empty_list(l1: LinkedList):
 def test_linked_list_prepend(l0: LinkedList):
     l0.prepend(0)
     assert l0.head == 0
-    assert l0.head.next_node is None 
+    assert l0.head.next_node is None
     l0.prepend(-1)
     assert l0.head == -1
     assert l0.head.next_node == 0
@@ -81,13 +81,11 @@ def test_contains_simple(l0: LinkedList):
     assert "b" in l0
 
 
-@pytest.mark.parametrize(
-    "wrong_type",
-    ("abc", b"abc", 1, LinkedList, list)
-)
+@pytest.mark.parametrize("wrong_type", ("abc", b"abc", 1, LinkedList, list))
 def test_linked_list_add_from_iterable_wrong_type(l0: LinkedList, wrong_type):
     with pytest.raises(TypeError):
         l0._add_from_iterable(wrong_type)
+
 
 @pytest.mark.parametrize(
     "_iter",
@@ -98,8 +96,8 @@ def test_linked_list_add_from_iterable_wrong_type(l0: LinkedList, wrong_type):
         bytearray(range(20)),
         [i for i in range(20)],
         {i: i * 2 for i in range(20)},
-        {i for i in range(20)}
-    )
+        {i for i in range(20)},
+    ),
 )
 def test_linked_list_add_from_iterable_correct_type(l0: LinkedList, _iter):
     l0._add_from_iterable(_iter)
@@ -108,32 +106,25 @@ def test_linked_list_add_from_iterable_correct_type(l0: LinkedList, _iter):
 
 
 def test_linked_list_create_no_arguments(l0: LinkedList):
-    assert l0.head == None
+    assert l0.head is None
     assert l0.size == 0
 
 
 @pytest.mark.parametrize(
-    "wrong_type",
-    ("a", 1, type, INode, str, LinkedList, Node(1))
+    "wrong_type", ("a", 1, type, INode, str, LinkedList, Node(1))
 )
 def test_linked_list_create_wrong_node_type(wrong_type):
     with pytest.raises(TypeError):
         LinkedList(node_type=wrong_type)
 
 
-@pytest.mark.parametrize(
-    "head",
-    (Node(2), Node(None), Node((1, 2)))
-)
+@pytest.mark.parametrize("head", (Node(2), Node(None), Node((1, 2))))
 def test_linked_list_create_single_item_node_type(head):
     lt = LinkedList(head)
     assert lt.head == Node(head) == head
 
 
-@pytest.mark.parametrize(
-    "head",
-    (2, "a", b"abc", 0)
-)
+@pytest.mark.parametrize("head", (2, "a", b"abc", 0))
 def test_linked_list_create_single_item_non_node_type(head):
     lt = LinkedList(head)
     assert lt.head == Node(head) == head
@@ -148,8 +139,8 @@ def test_linked_list_create_single_item_non_node_type(head):
         bytearray(range(20)),
         [i for i in range(20)],
         {i: i * 2 for i in range(20)},
-        {i for i in range(20)}
-    )
+        {i for i in range(20)},
+    ),
 )
 def test_linked_list_create_from_iterable(itr):
     lt = LinkedList(itr)
@@ -167,7 +158,7 @@ def test_linked_list_create_from_iterable(itr):
         range(20),
         (i for i in range(200)),
         [i for i in range(2000)],
-    )
+    ),
 )
 def test_linked_list_copy_no_arguments(value):
     lt = LinkedList(value)
@@ -178,9 +169,7 @@ def test_linked_list_copy_no_arguments(value):
 
 @pytest.mark.parametrize(
     ("_from", "_until"),
-    (
-        ("a", None), ("a", "b"), ([1, 2, 3], False), (type, INode), (1, int)
-    )
+    (("a", None), ("a", "b"), ([1, 2, 3], False), (type, INode), (1, int)),
 )
 def test_linked_list_copy_wrong_type(l2: LinkedList, _from, _until):
     with pytest.raises(TypeError):
@@ -188,12 +177,11 @@ def test_linked_list_copy_wrong_type(l2: LinkedList, _from, _until):
 
 
 @pytest.mark.parametrize(
-    ("_from", "_until"),
-    (
-        (0, 5), (5, 10), (0, 20), (18, 19)
-    )
+    ("_from", "_until"), ((0, 5), (5, 10), (0, 20), (18, 19))
 )
-def test_linked_list_copy_with_arguments_positive_indexes(l2: LinkedList, _from, _until):
+def test_linked_list_copy_with_arguments_positive_indexes(
+    l2: LinkedList, _from, _until
+):
     lt = LinkedList(range(_from, _until))
     l2c = l2.copy(_from, _until)
     for i in range(l2c.size):
@@ -202,23 +190,22 @@ def test_linked_list_copy_with_arguments_positive_indexes(l2: LinkedList, _from,
 
 @pytest.mark.parametrize(
     ("_from", "_until"),
-    (
-        (-5, None), (-15, 10), (-5, -2), (-20, 200), (-19, -18)
-    )
+    ((-5, None), (-15, 10), (-5, -2), (-20, 200), (-19, -18)),
 )
-def test_linked_list_copy_with_arguments_negative_indexes(l2: LinkedList, _from, _until):
-    lt = l2[_from: _until]
+def test_linked_list_copy_with_arguments_negative_indexes(
+    l2: LinkedList, _from, _until
+):
+    lt = l2[_from:_until]
     l2c = l2.copy(_from, _until)
     for i in range(l2c.size):
         l2c[i] == lt[i]
 
 
 @pytest.mark.parametrize(
-    ("_from", "_until"),
-    (
-        (-5, -6), (-15, -20), (-5, -7), (5, 2), (19, 19)
-    )
+    ("_from", "_until"), ((-5, -6), (-15, -20), (-5, -7), (5, 2), (19, 19))
 )
-def test_linked_list_copy_with_arguments_empty_list_expected(l2: LinkedList, _from, _until):
+def test_linked_list_copy_with_arguments_empty_list_expected(
+    l2: LinkedList, _from, _until
+):
     l2c = l2.copy(_from, _until)
     assert l2c.is_empty()

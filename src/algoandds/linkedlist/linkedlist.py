@@ -21,7 +21,7 @@ class LinkedList(MutableSequence):
             self.head = node_type(head)
 
     @staticmethod
-    def _is_valid_node_type(node_type) -> None:
+    def _is_valid_node_type(node_type) -> bool:
         return issubclass(node_type, INode) and node_type is not INode
 
     def _set_node_type(self, node_type) -> None:
@@ -81,14 +81,15 @@ class LinkedList(MutableSequence):
             )
         if index < 0:
             raise NotImplementedError(
-                "Negative sequence indexes are not yet implemented.")
+                "Negative sequence indexes are not yet implemented."
+            )
         if index > self.size:
             raise IndexError(f"Sequence index {index} out of range.")
         if index == 0:
             self.prepend(value)
         else:
             new_node = self._create_new_node(value)
-            node_before = self[index-1]
+            node_before = self[index - 1]
             new_node.set_next_node(node_before.next_node)
             node_before.set_next_node(new_node)
 
@@ -122,7 +123,7 @@ class LinkedList(MutableSequence):
                 f"Index must be an int, not {get_class_name(index)}"
             )
         item_to_remove = self.__getitem__(index)
-        previous = self.__getitem__(index-1)
+        previous = self.__getitem__(index - 1)
         previous.set_next_node(item_to_remove.next_node)
         return item_to_remove
 
@@ -130,7 +131,7 @@ class LinkedList(MutableSequence):
         if self.is_empty():
             raise IndexError("Empty list.")
         if index is None:
-            index = self.size-1
+            index = self.size - 1
         if index == 0 or index + self.size == 0:
             item_to_remove = self._pop_head()
         else:
@@ -163,11 +164,11 @@ class LinkedList(MutableSequence):
         if not self._is_valid_int(_from):
             raise TypeError(
                 f"Wrong type {get_class_name(_from)} for _from parameter."
-        )
+            )
         if not self._is_valid_int(_until) and _until is not None:
             raise TypeError(
                 f"Wrong type {get_class_name(_from)} for _until parameter."
-        )
+            )
         new_list = LinkedList()
         if self.is_empty():
             return new_list
@@ -199,7 +200,7 @@ class LinkedList(MutableSequence):
             left_half, right_half = self, LinkedList()
         else:
             mid = n // 2 if not index else index
-            left_half, right_half = self.copy(_until=mid-1), self.copy(mid)
+            left_half, right_half = self.copy(_until=mid - 1), self.copy(mid)
         return left_half, right_half
 
     def sort(self) -> "LinkedList":
@@ -389,9 +390,7 @@ class LinkedList(MutableSequence):
                     self[i] = item
                     i += step
         else:
-            raise TypeError(
-                f"Wrong type for index: {get_class_name(index)}."
-            )
+            raise TypeError(f"Wrong type for index: {get_class_name(index)}.")
 
     def _get_indices_from_slice(self, sl: slice):
         start, stop, step = sl.indices(len(self))
@@ -406,16 +405,13 @@ class LinkedList(MutableSequence):
             self.pop(index)
         elif isinstance(index, slice):
             indices = self._get_indices_from_slice(index)
-            print("DEBUG indices:", indices)
-            counter = 0
+            number_of_poped_items = 0
             for i in indices:
-                i -= counter
+                i -= number_of_poped_items
                 self.pop(i)
-                counter += 1
+                number_of_poped_items += 1
         else:
-            raise TypeError(
-                f"Wrong type for index: {get_class_name(index)}."
-            )
+            raise TypeError(f"Wrong type for index: {get_class_name(index)}.")
 
     def _generator(self):
         current = self.head
@@ -447,6 +443,7 @@ class LinkedList(MutableSequence):
 # for manual testing purposes
 if __name__ == "__main__":
     from random import randint
+
     l1 = LinkedList([0, 1, 2])
     l2 = LinkedList([randint(0, 100) for i in range(20)])
     l3 = LinkedList([randint(0, 1000) for i in range(100)])
