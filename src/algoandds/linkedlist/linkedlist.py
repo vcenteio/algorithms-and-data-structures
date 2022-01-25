@@ -17,7 +17,7 @@ class LinkedList(MutableSequence):
             self.head = head
         elif self._is_valid_iterable(head):
             self._add_from_iterable(head)
-        elif head:
+        else:
             self.head = node_type(head)
 
     @staticmethod
