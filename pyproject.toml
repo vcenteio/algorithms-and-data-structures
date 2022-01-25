@@ -23,6 +23,7 @@ pytest = "^6.2.5"
 pytest-cov = "^3.0.0"
 tox = "^3.24.5"
 pylint = "^2.12.2"
+commitizen = "^2.20.4"
 
 [tool.black]
 line-length = 79
