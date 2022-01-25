@@ -99,3 +99,53 @@ def test_linked_list_add_from_iterable_correct_type(l0: LinkedList, _iter):
     l0._add_from_iterable(_iter)
     for item in _iter:
         assert item in l0
+
+
+def test_linked_list_create_no_arguments(l0: LinkedList):
+    assert l0.head == None
+    assert l0.size == 0
+
+
+@pytest.mark.parametrize(
+    "wrong_type",
+    ("a", 1, type, INode, str, LinkedList, Node(1))
+)
+def test_linked_list_create_wrong_node_type(wrong_type):
+    with pytest.raises(TypeError):
+        LinkedList(node_type=wrong_type)
+
+
+@pytest.mark.parametrize(
+    "head",
+    (Node(2), Node(None), Node((1, 2)))
+)
+def test_linked_list_create_single_item_node_type(head):
+    lt = LinkedList(head)
+    assert lt.head == Node(head) == head
+
+
+@pytest.mark.parametrize(
+    "head",
+    (2, "a", b"abc", 0)
+)
+def test_linked_list_create_single_item_non_node_type(head):
+    lt = LinkedList(head)
+    assert lt.head == Node(head) == head
+
+
+@pytest.mark.parametrize(
+    "itr",
+    (
+        range(20),
+        (i for i in range(20)),
+        tuple((i for i in range(20))),
+        bytearray(range(20)),
+        [i for i in range(20)],
+        {i: i * 2 for i in range(20)},
+        {i for i in range(20)}
+    )
+)
+def test_linked_list_create_from_iterable(itr):
+    lt = LinkedList(itr)
+    for item in itr:
+        assert item in lt
