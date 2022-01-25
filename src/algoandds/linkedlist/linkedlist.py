@@ -1,4 +1,4 @@
-import sys
+﻿import sys
 from typing import Any, Union, Tuple, Optional, overload
 from collections.abc import MutableSequence, Iterable
 
@@ -153,16 +153,32 @@ class LinkedList(MutableSequence):
                         previous = current
                         current = current.next_node
 
-    def copy(self, _from=0, _until=None) -> "LinkedList":
+    @staticmethod
+    def _is_valid_int(value) -> bool:
+        return isinstance(value, int) and not isinstance(value, bool)
+
+    def copy(
+        self, _from: int = 0, _until: Optional[int] = None
+    ) -> "LinkedList":
+        if not self._is_valid_int(_from):
+            raise TypeError(
+                f"Wrong type {get_class_name(_from)} for _from parameter."
+        )
+        if not self._is_valid_int(_until) and _until is not None:
+            raise TypeError(
+                f"Wrong type {get_class_name(_from)} for _until parameter."
+        )
         new_list = LinkedList()
-        if not self.is_empty():
-            until = self.size-1 if _until is None else _until
-            current = self[_from]
-            count = _from
-            while current and count <= until:
-                new_list.append(current)
-                current = current.next_node
-                count += 1
+        if self.is_empty():
+            return new_list
+        start = _from
+        stop = self.size if _until is None else _until
+        count, until, _ = slice(start, stop).indices(self.size)
+        current = self[count]
+        while current and count < until:
+            new_list.append(current)
+            current = current.next_node
+            count += 1
         return new_list
 
     def reverse(self):

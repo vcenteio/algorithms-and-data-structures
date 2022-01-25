@@ -6,9 +6,15 @@ from src.algoandds.linkedlist import LinkedList, Node, INode
 def l0():
     return LinkedList()
 
+
 @pytest.fixture
 def l1():
     return LinkedList(1)
+
+
+@pytest.fixture
+def l2():
+    return LinkedList([i for i in range(20)])
 
 
 def test_linked_list_set_node_type_wrong_type(l0: LinkedList):
@@ -149,3 +155,70 @@ def test_linked_list_create_from_iterable(itr):
     lt = LinkedList(itr)
     for item in itr:
         assert item in lt
+
+
+@pytest.mark.parametrize(
+    "value",
+    (
+        1,
+        "abc",
+        b"abc",
+        (1, 2, 3),
+        range(20),
+        (i for i in range(200)),
+        [i for i in range(2000)],
+    )
+)
+def test_linked_list_copy_no_arguments(value):
+    lt = LinkedList(value)
+    lc = lt.copy()
+    for i in range(lt.size):
+        lt[i] == lc[i]
+
+
+@pytest.mark.parametrize(
+    ("_from", "_until"),
+    (
+        ("a", None), ("a", "b"), ([1, 2, 3], False), (type, INode), (1, int)
+    )
+)
+def test_linked_list_copy_wrong_type(l2: LinkedList, _from, _until):
+    with pytest.raises(TypeError):
+        l2.copy(_from, _until)
+
+
+@pytest.mark.parametrize(
+    ("_from", "_until"),
+    (
+        (0, 5), (5, 10), (0, 20), (18, 19)
+    )
+)
+def test_linked_list_copy_with_arguments_positive_indexes(l2: LinkedList, _from, _until):
+    lt = LinkedList(range(_from, _until))
+    l2c = l2.copy(_from, _until)
+    for i in range(l2c.size):
+        l2c[i] == lt[i]
+
+
+@pytest.mark.parametrize(
+    ("_from", "_until"),
+    (
+        (-5, None), (-15, 10), (-5, -2), (-20, 200), (-19, -18)
+    )
+)
+def test_linked_list_copy_with_arguments_negative_indexes(l2: LinkedList, _from, _until):
+    lt = l2[_from: _until]
+    l2c = l2.copy(_from, _until)
+    for i in range(l2c.size):
+        l2c[i] == lt[i]
+
+
+@pytest.mark.parametrize(
+    ("_from", "_until"),
+    (
+        (-5, -6), (-15, -20), (-5, -7), (5, 2), (19, 19)
+    )
+)
+def test_linked_list_copy_with_arguments_empty_list_expected(l2: LinkedList, _from, _until):
+    l2c = l2.copy(_from, _until)
+    assert l2c.is_empty()
