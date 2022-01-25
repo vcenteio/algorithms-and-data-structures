@@ -224,10 +224,15 @@ class LinkedList(MutableSequence):
     def _is_valid_iterable(itr: Any) -> bool:
         return isinstance(itr, Iterable) and not isinstance(itr, (str, bytes))
 
-    def _add_from_iterable(self, other: Iterable):
-        if self._is_valid_iterable(other):
-            for i in other:
+    def _add_from_iterable(self, itr: Iterable):
+        if self._is_valid_iterable(itr):
+            for i in itr:
                 self.append(i)
+        else:
+            raise TypeError(
+                f"Invalid item of type {get_class_name(itr)}"
+                "passed as argument."
+            )
 
     def _add_item(self, other: Any):
         if self._is_valid_iterable(other):
