@@ -75,16 +75,13 @@ class LinkedList(MutableSequence):
         self.head = new_node
 
     def insert(self, index: int, value: Any) -> None:
-        if not isinstance(index, int) or isinstance(index, bool):
+        if not self._is_valid_int(index):
             raise TypeError(
                 f"Index type should be an int, not {type(index).__name__}."
             )
-        if index < 0:
-            raise NotImplementedError(
-                "Negative sequence indexes are not yet implemented."
-            )
-        if index > self.size:
+        if abs(index) > self.size:
             raise IndexError(f"Sequence index {index} out of range.")
+        index = index + self.size if index < 0 else index
         if index == 0:
             self.prepend(value)
         else:

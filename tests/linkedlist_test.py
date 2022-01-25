@@ -223,3 +223,24 @@ def test_linked_list_size(l0: LinkedList, itr):
     assert l0.size == 0
     l0.extend(itr)
     assert l0.size == len(itr)
+
+
+@pytest.mark.parametrize(
+    "wrong_index", ("a", b"a", True, False, None, [1, 2, 3], type)
+)
+def test_linked_list_insert_wrong_type(l0: LinkedList, wrong_index):
+    with pytest.raises(TypeError):
+        l0.insert(wrong_index, 1)
+
+
+@pytest.mark.parametrize("index", (21, -21, 100, -100))
+def test_linked_list_insert_index_out_of_range(l1: LinkedList, index):
+    with pytest.raises(IndexError):
+        l1.insert(index, 1)
+
+
+@pytest.mark.parametrize("index", (20, -20, 10, -10, 8, -8, 3, -3))
+def test_linked_list_insert_correct_index(l2: LinkedList, index):
+    l2.insert(index, "a")
+    index = index - 1 if index < 0 else index
+    assert l2[index] == "a"
