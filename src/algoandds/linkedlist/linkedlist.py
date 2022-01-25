@@ -91,7 +91,7 @@ class LinkedList(MutableSequence):
     def extend(self, values) -> None:
         self += values
 
-    def search(self, item: Any) -> Union[int, None]:
+    def _get_index(self, item: Any) -> Union[int, None]:
         current = self.head
         index = 0
         while current:
@@ -102,7 +102,7 @@ class LinkedList(MutableSequence):
         return None
 
     def index(self, value: Any, start=0, stop=sys.maxsize) -> int:
-        index = self.search(value)
+        index = self._get_index(value)
         if index is None or index < start or index > stop:
             raise ValueError(f"{value} is not in linked list.")
         return index
@@ -408,7 +408,7 @@ class LinkedList(MutableSequence):
         return next(self._i)
 
     def __contains__(self, item: Any) -> bool:
-        return self.search(item) is not None
+        return self._get_index(item) is not None
 
     def __repr__(self):
         nodes = []
