@@ -209,3 +209,17 @@ def test_linked_list_copy_with_arguments_empty_list_expected(
 ):
     l2c = l2.copy(_from, _until)
     assert l2c.is_empty()
+
+
+@pytest.mark.parametrize(
+    "itr",
+    (
+        [i for i in range(20)],
+        [i for i in range(200)],
+        [i for i in range(1845)],
+    ),
+)
+def test_linked_list_size(l0: LinkedList, itr):
+    assert l0.size == 0
+    l0.extend(itr)
+    assert l0.size == len(itr)
