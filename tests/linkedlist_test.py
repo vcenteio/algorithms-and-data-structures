@@ -73,3 +73,29 @@ def test_contains_simple(l0: LinkedList):
     assert "a" in l0
     l0.append("b")
     assert "b" in l0
+
+
+@pytest.mark.parametrize(
+    "wrong_type",
+    ("abc", b"abc", 1, LinkedList, list)
+)
+def test_linked_list_add_from_iterable_wrong_type(l0: LinkedList, wrong_type):
+    with pytest.raises(TypeError):
+        l0._add_from_iterable(wrong_type)
+
+@pytest.mark.parametrize(
+    "_iter",
+    (
+        range(20),
+        (i for i in range(20)),
+        tuple((i for i in range(20))),
+        bytearray(range(20)),
+        [i for i in range(20)],
+        {i: i * 2 for i in range(20)},
+        {i for i in range(20)}
+    )
+)
+def test_linked_list_add_from_iterable_correct_type(l0: LinkedList, _iter):
+    l0._add_from_iterable(_iter)
+    for item in _iter:
+        assert item in l0
