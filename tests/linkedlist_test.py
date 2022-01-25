@@ -57,3 +57,19 @@ def test_linked_list_prepend(l0: LinkedList):
     l0.prepend(-1)
     assert l0.head == -1
     assert l0.head.next_node == 0
+
+
+def test_get_index_simple(l0: LinkedList):
+    assert l0._get_index("a") is None
+    l0.append("a")
+    assert l0._get_index("a") == 0
+    l0.append("b")
+    assert l0._get_index("b") == 1
+
+
+def test_contains_simple(l0: LinkedList):
+    assert "a" not in l0
+    l0.append("a")
+    assert "a" in l0
+    l0.append("b")
+    assert "b" in l0
