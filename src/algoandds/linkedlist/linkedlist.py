@@ -20,8 +20,12 @@ class LinkedList(MutableSequence):
         elif head:
             self.head = node_type(head)
 
+    @staticmethod
+    def _is_valid_node_type(node_type) -> None:
+        return issubclass(node_type, INode) and node_type is not INode
+
     def _set_node_type(self, node_type) -> None:
-        if not issubclass(node_type, INode):
+        if not self._is_valid_node_type(node_type):
             raise TypeError(f"Invalid node type ({type(node_type)}).")
         self._node_type = node_type
 
