@@ -120,31 +120,34 @@ class LinkedList(MutableSequence):
             raise ValueError(f"{value} is not in linked list.")
         return index
 
-    def _pop_head(self):
+    def _pop_head(self) -> INode:
+        assert self.head is not None  # mypy hack
         item_to_remove = self.head
         self.head = self.head.next_node
         return item_to_remove
 
-    def _remove_by_index(self, index: int):
-        if not isinstance(index, int):
+    def _pop_at_index(self, index: int) -> INode:
+        if not self._is_valid_int(index):
             raise TypeError(
-                f"Index must be an int, not {get_class_name(index)}"
+                f"index must be an int, not {get_class_name(index)}"
             )
-        item_to_remove = self.__getitem__(index)
-        previous = self.__getitem__(index - 1)
-        previous.set_next_node(item_to_remove.next_node)
+        item_to_remove = self[index]
+        previous_item = self[index - 1]
+        previous_item.set_next_node(item_to_remove.next_node)
         return item_to_remove
 
-    def pop(self, index: int = None) -> Union[Node, None]:
+    def _is_head_index(self, index: int) -> bool:
+        return index == 0 or index + self.size == 0
+
+    def pop(self, index: int = None) -> INode:
         if self.is_empty():
-            raise IndexError("Empty list.")
-        if index is None:
-            index = self.size - 1
-        if index == 0 or index + self.size == 0:
-            item_to_remove = self._pop_head()
+            raise IndexError("pop from empty list")
+        i = self.size - 1 if index is None else index
+        if not self._is_head_index(i):
+            item = self._pop_at_index(i)
         else:
-            item_to_remove = self._remove_by_index(index)
-        return item_to_remove
+            item = self._pop_head()
+        return item
 
     def remove(self, item: Any) -> None:
         current = self.head
