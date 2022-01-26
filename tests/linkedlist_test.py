@@ -332,6 +332,8 @@ def test_linked_list_index_start_stop_within_range_value_not_found(
 def test_linked_list_pop_empty_list(l0: LinkedList):
     with pytest.raises(IndexError):
         l0.pop()
+    with pytest. raises(IndexError):
+        l0._pop_head()
 
 
 def test_linked_list_pop_no_index_non_empty_list(l2: LinkedList):
@@ -347,9 +349,13 @@ def test_linked_list_pop_wrong_index_type(l2: LinkedList, wrong_index):
         l2.pop(wrong_index)
 
 
-def test_linked_list_pop_head(l2: LinkedList):
+def test_linked_list_pop_head_non_empty_list(l2: LinkedList):
     head = l2.head
     poped_head = l2.pop(0)
+    assert poped_head == head
+    assert l2.head == head.next_node
+    head = l2.head
+    poped_head = l2._pop_head()
     assert poped_head == head
     assert l2.head == head.next_node
 

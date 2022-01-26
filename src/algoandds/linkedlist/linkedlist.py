@@ -128,10 +128,6 @@ class LinkedList(MutableSequence):
         return item_to_remove
 
     def _pop_at_index(self, index: int) -> INode:
-        if not self._is_valid_int(index):
-            raise TypeError(
-                f"index must be an int, not {get_class_name(index)}"
-            )
         item_to_remove = self[index]
         previous_item = self[index - 1]
         previous_item.set_next_node(item_to_remove.next_node)
@@ -143,6 +139,10 @@ class LinkedList(MutableSequence):
     def pop(self, index: int = None) -> INode:
         if self.is_empty():
             raise IndexError("pop from empty list")
+        if not self._is_valid_int(index) and index is not None:
+            raise TypeError(
+                f"index must be an int, not {get_class_name(index)}"
+            )
         i = self.size - 1 if index is None else index
         if not self._is_head_index(i):
             item = self._pop_at_index(i)
