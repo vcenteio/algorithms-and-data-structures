@@ -416,8 +416,8 @@ def test_linked_list_remove_value_in_list(l2: LinkedList):
     (
         (3, LinkedList((1 for _ in range(10)))),
         (
-            rand_value := randint(0, 99),
-            LinkedList((i for i in range(100) if i != rand_value)),
+            101,
+            LinkedList((i for i in range(100)))
         ),
     ),
 )
@@ -431,7 +431,7 @@ def test_linked_list_remove_all_value_not_in_list(value, llst: LinkedList):
     (
         (1, LinkedList((1 for _ in range(10)))),
         (
-            randint(0, 99),
+            49,
             LinkedList((i for i in range(100))),
         ),
         ("a", LinkedList((("a" if i % 2 == 0 else 1) for i in range(100)))),
@@ -480,3 +480,27 @@ def test_linked_list_eq_other_different_items(itr1: Iterable, itr2: Iterable):
 )
 def test_linked_list_eq_other_equal(itr1: Iterable, itr2: Iterable):
     assert LinkedList(itr1) == LinkedList(itr2)
+
+
+def test_linked_list_reverse_empty_list(l0: LinkedList):
+    lr = l0.reverse()
+    assert lr.is_empty()
+    l0.head = Node(0)
+    lr = l0.reverse()
+    assert not lr.is_empty()
+    l0.head = None
+    lr = l0.reverse()
+    assert lr.is_empty()
+
+
+@pytest.mark.parametrize(
+    "itr",
+    (
+        [i for i in range(10)],
+        [randint(0, 99) for _ in range(100)],
+        tuple((randint(0, 1000) for _ in range(1000)))
+    )
+)
+def test_linked_list_reverse_non_empty_list(itr: Iterable):
+    llst = LinkedList(itr)
+    assert llst.reverse() == LinkedList(tuple(reversed(itr)))  # type: ignore
