@@ -121,7 +121,8 @@ class LinkedList(MutableSequence):
         return index
 
     def _pop_head(self) -> INode:
-        assert self.head is not None  # mypy hack
+        if self.head is None:
+            raise IndexError("pop from empty list")
         item_to_remove = self.head
         self.head = self.head.next_node
         return item_to_remove
@@ -467,13 +468,3 @@ class LinkedList(MutableSequence):
             nodes.append(f"{current.data}")
             current = current.next_node
         return " -> ".join(nodes)
-
-
-# for manual testing purposes
-if __name__ == "__main__":
-    from random import randint
-
-    l1 = LinkedList([0, 1, 2])
-    l2 = LinkedList([randint(0, 100) for i in range(20)])
-    l3 = LinkedList([randint(0, 1000) for i in range(100)])
-    g = (i for i in range(10))
