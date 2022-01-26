@@ -149,21 +149,39 @@ class LinkedList(MutableSequence):
             item = self._pop_head()
         return item
 
-    def remove(self, item: Any) -> None:
-        current = self.head
-        while self.head and current:
-            if self.head.data == item:
-                self.head = self.head.next_node
-            else:
-                previous = self.head
-                current = self.head.next_node
-                while current:
-                    if current.data == item:
-                        previous.set_next_node(current.next_node)
-                        current = current.next_node
-                    else:
-                        previous = current
-                        current = current.next_node
+    def remove(self, value: Any) -> None:
+        """Removes first occurrence of value.
+
+        Raises ValueError if value is not in the list.
+        """
+        if self.head is not None:
+            if self.head.data == value:
+                self._pop_head()
+                return
+            current = self.head.next_node
+            previous = self.head
+            while current:
+                if current.data == value:
+                    previous.set_next_node(current.next_node)
+                    return
+                else:
+                    previous = current
+                    current = current.next_node
+        raise ValueError("value not in list")
+
+    def remove_all(self, value: Any) -> None:
+        """Removes all occurrences of value.
+
+        Raises ValueError if value is not in the list.
+        """
+        try:
+            removed_items = 0
+            while True:
+                self.remove(value)
+                removed_items += 1
+        except ValueError:
+            if removed_items == 0:
+                raise ValueError("value not in list")
 
     @staticmethod
     def _is_valid_int(value) -> bool:

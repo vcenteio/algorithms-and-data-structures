@@ -383,3 +383,53 @@ def test_linked_list_pop_random_valid_indices(itr, indices):
         item = lt[i]
         assert lt.pop(i) == item
         count += 1
+
+
+def test_linked_list_remove_empty_list(l0: LinkedList):
+    with pytest.raises(ValueError):
+        l0.remove(1)
+    with pytest.raises(ValueError):
+        l0.remove(None)
+
+
+def test_linked_list_remove_value_not_in_list(l2: LinkedList):
+    for value in range(l2.size, l2.size + 10):
+        with pytest.raises(ValueError):
+            l2.remove(value)
+
+
+def test_linked_list_remove_value_in_list(l2: LinkedList):
+    for value in range(0, l2.size):
+        l2.remove(value)
+        assert value not in l2
+
+
+@pytest.mark.parametrize(
+    ("value", "llst"),
+    (
+        (3, LinkedList((1 for _ in range(10)))),
+        (
+            rand_value := randint(0, 99),
+            LinkedList((i for i in range(100) if i != rand_value)),
+        ),
+    ),
+)
+def test_linked_list_remove_all_value_not_in_list(value, llst: LinkedList):
+    with pytest.raises(ValueError):
+        llst.remove_all(value)
+
+
+@pytest.mark.parametrize(
+    ("value", "llst"),
+    (
+        (1, LinkedList((1 for _ in range(10)))),
+        (
+            randint(0, 99),
+            LinkedList((i for i in range(100))),
+        ),
+        ("a", LinkedList((("a" if i % 2 == 0 else 1) for i in range(100)))),
+    ),
+)
+def test_linked_list_remove_all_value_in_list(value, llst: LinkedList):
+    llst.remove_all(value)
+    assert value not in llst
