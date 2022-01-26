@@ -1,4 +1,6 @@
 import pytest
+from random import randint
+
 from src.algoandds.linkedlist import LinkedList, Node, INode
 
 
@@ -325,3 +327,59 @@ def test_linked_list_index_start_stop_within_range_value_not_found(
 ):
     with pytest.raises(ValueError):
         l2.index(value, start, stop)
+
+
+def test_linked_list_pop_empty_list(l0: LinkedList):
+    with pytest.raises(IndexError):
+        l0.pop()
+
+
+def test_linked_list_pop_no_index_non_empty_list(l2: LinkedList):
+    tail = l2.tail
+    assert l2.pop() == tail
+
+
+@pytest.mark.parametrize(
+    "wrong_index", ("a", b"abc", bytearray((1, 2, 3)), type, {})
+)
+def test_linked_list_pop_wrong_index_type(l2: LinkedList, wrong_index):
+    with pytest.raises(TypeError):
+        l2.pop(wrong_index)
+
+
+def test_linked_list_pop_head(l2: LinkedList):
+    head = l2.head
+    poped_head = l2.pop(0)
+    assert poped_head == head
+    assert l2.head == head.next_node
+
+
+def test_linked_list_pop_valid_indices(l2: LinkedList):
+    for i in range(20):
+        lt = l2.copy()
+        lt.pop(i)
+        assert i not in lt
+
+
+@pytest.mark.parametrize(
+    ("itr", "indices"),
+    [
+        (
+            (randint(0, 9999) for _ in range(10000)),
+            (randint(0, 9999) for _ in range(1000)),
+        ),
+        (
+            (randint(0, 9999) for _ in range(10000)),
+            (randint(-10000, 9999) for _ in range(1000)),
+        ),
+    ],
+)
+def test_linked_list_pop_random_valid_indices(itr, indices):
+    lt = LinkedList(itr)
+    count = 0
+    for i in indices:
+        if i != 0:
+            i = i - count if i > 0 else i + count
+        item = lt[i]
+        assert lt.pop(i) == item
+        count += 1
