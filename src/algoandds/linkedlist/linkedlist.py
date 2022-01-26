@@ -461,6 +461,17 @@ class LinkedList(MutableSequence):
     def __contains__(self, item: Any) -> bool:
         return self._get_index(item) is not None
 
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, LinkedList):
+            return False
+        n = self.size
+        if n != other.size:
+            return False
+        for i in range(n):
+            if self[i] != other[i]:
+                return False
+        return True
+
     def __repr__(self):
         nodes = []
         current = self.head

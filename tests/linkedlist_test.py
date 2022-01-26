@@ -1,3 +1,4 @@
+from typing import Iterable
 import pytest
 from random import randint
 
@@ -439,3 +440,43 @@ def test_linked_list_remove_all_value_not_in_list(value, llst: LinkedList):
 def test_linked_list_remove_all_value_in_list(value, llst: LinkedList):
     llst.remove_all(value)
     assert value not in llst
+
+
+@pytest.mark.parametrize(
+    "other",
+    ("a", b"abc", [1, 2, 3], {}, {1: 2, 3: 4}, bytearray((1, 2, 3)))
+)
+def test_linked_list_eq_other_not_linked_list(l1: LinkedList, other):
+    assert l1 != other
+
+
+@pytest.mark.parametrize(
+    "other",
+    (LinkedList([1, 1]), LinkedList())
+)
+def test_linked_list_eq_other_different_size(l1: LinkedList, other):
+    assert l1 != other
+
+
+@pytest.mark.parametrize(
+    ("itr1", "itr2"),
+    (
+        ((i for i in range(10)), (i for i in range(9))),
+        ((i for i in range(10)), (i for i in range(1, 10))),
+        (lst := [randint(0, 99) for _ in range(100)], reversed(lst))
+    )
+)
+def test_linked_list_eq_other_different_items(itr1: Iterable, itr2: Iterable):
+    assert LinkedList(itr1) != LinkedList(itr2)
+
+
+@pytest.mark.parametrize(
+    ("itr1", "itr2"),
+    (
+        ((i for i in range(10)), (i for i in range(10))),
+        ((i for i in range(10)), (i for i in range(10))),
+        (lst := [randint(0, 99) for _ in range(100)], lst)
+    )
+)
+def test_linked_list_eq_other_equal(itr1: Iterable, itr2: Iterable):
+    assert LinkedList(itr1) == LinkedList(itr2)
