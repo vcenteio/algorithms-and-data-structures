@@ -1,4 +1,4 @@
-﻿import sys
+import sys
 from typing import Any, Union, Tuple, Optional, overload
 from collections.abc import MutableSequence, Iterable
 
@@ -93,6 +93,11 @@ class LinkedList(MutableSequence):
     def extend(self, values) -> None:
         self += values
 
+    def _convert_indices(
+        self, start: int, stop: int, step: Optional[int] = None
+    ) -> Tuple[int, int, int]:
+        return slice(start, stop, step).indices(self.size)
+
     def _get_index(self, item: Any) -> Union[int, None]:
         current = self.head
         index = 0
@@ -171,7 +176,7 @@ class LinkedList(MutableSequence):
             return new_list
         start = _from
         stop = self.size if _until is None else _until
-        count, until, _ = slice(start, stop).indices(self.size)
+        count, until, _ = self._convert_indices(start, stop)
         current = self[count]
         while current and count < until:
             new_list.append(current)
