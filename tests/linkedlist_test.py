@@ -504,3 +504,13 @@ def test_linked_list_reverse_empty_list(l0: LinkedList):
 def test_linked_list_reverse_non_empty_list(itr: Iterable):
     llst = LinkedList(itr)
     assert llst.reverse() == LinkedList(tuple(reversed(itr)))  # type: ignore
+
+
+def test_linked_list_clear(l0: LinkedList, l1: LinkedList, l2: LinkedList):
+    l0.clear()
+    assert l0.is_empty()
+    l1.clear()
+    assert l1.is_empty()
+    l2.clear()
+    assert l2.is_empty()
+    
