@@ -221,8 +221,7 @@ class LinkedList(MutableSequence):
         return new_list
 
     def clear(self) -> None:
-        while self.head:
-            self.head = self.head.next_node
+        self.head = None
 
     def split(self, index=None) -> Tuple["LinkedList", "LinkedList"]:
         n = self.size
