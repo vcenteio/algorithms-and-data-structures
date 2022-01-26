@@ -6,6 +6,9 @@ from .node import INode, Node
 from ..tools.tools import get_class_name
 
 
+MAXSIZE = sys.maxsize
+
+
 class LinkedList(MutableSequence):
     head: Optional[INode]
 
@@ -108,9 +111,12 @@ class LinkedList(MutableSequence):
             index += 1
         return None
 
-    def index(self, value: Any, start=0, stop=sys.maxsize) -> int:
+    def index(self, value: Any, start: int = 0, stop: int = MAXSIZE) -> int:
+        if not self._is_valid_int(start) or not self._is_valid_int(stop):
+            raise TypeError("Start and stop values must be integers.")
+        start, stop, _ = self._convert_indices(start, stop)
         index = self._get_index(value)
-        if index is None or index < start or index > stop:
+        if index is None or index < start or index >= stop:
             raise ValueError(f"{value} is not in linked list.")
         return index
 

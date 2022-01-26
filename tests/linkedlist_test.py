@@ -244,3 +244,84 @@ def test_linked_list_insert_correct_index(l2: LinkedList, index):
     l2.insert(index, "a")
     index = index - 1 if index < 0 else index
     assert l2[index] == "a"
+
+
+def test_linked_list_index_no_start_stop_value_found(l2: LinkedList):
+    for value in l2:
+        index = l2.index(value)
+        assert l2[index] == value
+
+
+def test_linked_list_index_no_start_stop_value_not_found(l2: LinkedList):
+    for value in range(l2.size, l2.size + 20):
+        with pytest.raises(ValueError):
+            l2.index(value)
+
+
+@pytest.mark.parametrize(
+    ("start", "stop"), ((None, None), ([1], [1]), ("a", "b"), ({}, {}))
+)
+def test_linked_list_index_start_stop_wrong_type(l2: LinkedList, start, stop):
+    with pytest.raises(TypeError):
+        l2.index(1, start, stop)
+
+
+@pytest.mark.parametrize(
+    ("start", "stop"),
+    ((-21, 22), (-21, 19), (0, 21), (5, 22), (-21, 5), (19, 100)),
+)
+def test_linked_list_index_start_stop_out_of_range_value_found(
+    l2: LinkedList, start, stop
+):
+    for value in l2[start:stop]:
+        index = l2.index(value, start, stop)
+        assert l2[index] == value
+
+
+@pytest.mark.parametrize(
+    ("value", "start", "stop"),
+    (
+        (6, -21, 5),
+        (19, -21, 18),
+        (4, 5, 21),
+        (8, 10, 22),
+        (10, -100, 9),
+        (18, 19, 100),
+    ),
+)
+def test_linked_list_index_start_stop_out_of_range_value_not_found(
+    l2: LinkedList, value, start, stop
+):
+    with pytest.raises(ValueError):
+        l2.index(value, start, stop)
+
+
+@pytest.mark.parametrize(
+    ("start", "stop"),
+    ((0, 20), (5, 20), (0, 10), (-5, -1), (-20, 20), (-15, 6)),
+)
+def test_linked_list_index_start_stop_within_range_value_found(
+    l2: LinkedList, start, stop
+):
+    for value in l2[start:stop]:
+        index = l2.index(value, start, stop)
+        assert l2[index] == value
+
+
+@pytest.mark.parametrize(
+    ("value", "start", "stop"),
+    (
+        (11, 0, 10),
+        (4, 5, 20),
+        (11, 0, 10),
+        (14, -5, -1),
+        (0, -19, 20),
+        (6, -15, 6),
+        (19, 19, 19),
+    ),
+)
+def test_linked_list_index_start_stop_within_range_value_not_found(
+    l2: LinkedList, value, start, stop
+):
+    with pytest.raises(ValueError):
+        l2.index(value, start, stop)
