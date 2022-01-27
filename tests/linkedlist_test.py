@@ -46,6 +46,75 @@ def test_linked_list_tail(l0: LinkedList, l1: LinkedList):
     assert l1.tail == 2
 
 
+@pytest.mark.parametrize("value", (1, "a", b"abc", [1, 2, 3]))
+def test_linked_list_count_empty_list(l0: LinkedList, value):
+    assert l0.count(value) == 0
+
+
+@pytest.mark.parametrize(
+    ("values", "llst"),
+    [
+        (
+            vs1 := {-1, -5, 21, 25, 99},
+            LinkedList([i for i in range(100) if i not in vs1]),
+        ),
+        (
+            vs2 := {randint(0, 1000) for _ in range(10)},
+            LinkedList([i for i in range(1000) if i not in vs2]),
+        ),
+        (
+            vs3 := {chr(randint(0, 100)) for _ in range(10)},
+            LinkedList([chr(i) for i in range(100) if chr(i) not in vs3]),
+        ),
+    ],
+)
+def test_linked_list_count_non_existent_value(llst: LinkedList, values):
+    for value in values:
+        assert llst.count(value) == 0
+
+
+@pytest.mark.parametrize(
+    ("values", "llst"),
+    [
+        ({-1, -5, 21, 25, 99}, LinkedList([i for i in range(-100, 100)])),
+        (
+            {randint(0, 999) for _ in range(10)},
+            LinkedList([i for i in range(1000)]),
+        ),
+        (
+            {chr(randint(0, 99)) for _ in range(10)},
+            LinkedList([chr(i) for i in range(100)]),
+        ),
+    ],
+)
+def test_linked_list_count_existent_value_one_occurrence(
+    llst: LinkedList, values
+):
+    for value in values:
+        assert llst.count(value) == 1
+
+
+@pytest.mark.parametrize(
+    ("values", "llst"),
+    [
+        ({-1, -5, 5, 3}, LinkedList([randint(-5, 5) for _ in range(200)])),
+        (
+            {randint(-10, 10) for _ in range(10)},
+            LinkedList([randint(-10, 10) for _ in range(1000)]),
+        ),
+        (
+            {chr(randint(0, 20)) for _ in range(10)},
+            LinkedList([chr(randint(0, 20)) for _ in range(1000)]),
+        ),
+    ],
+)
+def test_linked_list_count_existent_value_many_occurrences(
+    llst: LinkedList, values
+):
+    for value in values:
+        assert llst.count(value) > 1
+
+
 def test_linked_list_append_empty_list(l0: LinkedList):
     l0.append(1)
     assert l0.head == 1
