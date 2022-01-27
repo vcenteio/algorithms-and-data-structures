@@ -179,6 +179,11 @@ def test_linked_list_copy_wrong_type(l2: LinkedList, _from, _until):
         l2.copy(_from, _until)
 
 
+def test_linked_list_copy_empty_list(l0: LinkedList):
+    assert l0.copy().is_empty()
+    assert l0.size == 0
+
+
 @pytest.mark.parametrize(
     ("_from", "_until"), ((0, 5), (5, 10), (0, 20), (18, 19))
 )
