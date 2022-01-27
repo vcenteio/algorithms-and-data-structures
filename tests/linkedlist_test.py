@@ -1,4 +1,4 @@
-from typing import Iterable
+from typing import Iterable, Tuple
 import pytest
 from random import randint
 
@@ -333,7 +333,7 @@ def test_linked_list_index_start_stop_within_range_value_not_found(
 def test_linked_list_pop_empty_list(l0: LinkedList):
     with pytest.raises(IndexError):
         l0.pop()
-    with pytest. raises(IndexError):
+    with pytest.raises(IndexError):
         l0._pop_head()
 
 
@@ -415,10 +415,7 @@ def test_linked_list_remove_value_in_list(l2: LinkedList):
     ("value", "llst"),
     (
         (3, LinkedList((1 for _ in range(10)))),
-        (
-            101,
-            LinkedList((i for i in range(100)))
-        ),
+        (101, LinkedList((i for i in range(100)))),
     ),
 )
 def test_linked_list_remove_all_value_not_in_list(value, llst: LinkedList):
@@ -443,17 +440,13 @@ def test_linked_list_remove_all_value_in_list(value, llst: LinkedList):
 
 
 @pytest.mark.parametrize(
-    "other",
-    ("a", b"abc", [1, 2, 3], {}, {1: 2, 3: 4}, bytearray((1, 2, 3)))
+    "other", ("a", b"abc", [1, 2, 3], {}, {1: 2, 3: 4}, bytearray((1, 2, 3)))
 )
 def test_linked_list_eq_other_not_linked_list(l1: LinkedList, other):
     assert l1 != other
 
 
-@pytest.mark.parametrize(
-    "other",
-    (LinkedList([1, 1]), LinkedList())
-)
+@pytest.mark.parametrize("other", (LinkedList([1, 1]), LinkedList()))
 def test_linked_list_eq_other_different_size(l1: LinkedList, other):
     assert l1 != other
 
@@ -463,8 +456,8 @@ def test_linked_list_eq_other_different_size(l1: LinkedList, other):
     (
         ((i for i in range(10)), (i for i in range(9))),
         ((i for i in range(10)), (i for i in range(1, 10))),
-        (lst := [randint(0, 99) for _ in range(100)], reversed(lst))
-    )
+        (lst := [randint(0, 99) for _ in range(100)], reversed(lst)),
+    ),
 )
 def test_linked_list_eq_other_different_items(itr1: Iterable, itr2: Iterable):
     assert LinkedList(itr1) != LinkedList(itr2)
@@ -475,8 +468,8 @@ def test_linked_list_eq_other_different_items(itr1: Iterable, itr2: Iterable):
     (
         ((i for i in range(10)), (i for i in range(10))),
         ((i for i in range(10)), (i for i in range(10))),
-        (lst := [randint(0, 99) for _ in range(100)], lst)
-    )
+        (lst := [randint(0, 99) for _ in range(100)], lst),
+    ),
 )
 def test_linked_list_eq_other_equal(itr1: Iterable, itr2: Iterable):
     assert LinkedList(itr1) == LinkedList(itr2)
@@ -498,8 +491,8 @@ def test_linked_list_reverse_empty_list(l0: LinkedList):
     (
         [i for i in range(10)],
         [randint(0, 99) for _ in range(100)],
-        tuple((randint(0, 1000) for _ in range(1000)))
-    )
+        tuple((randint(0, 1000) for _ in range(1000))),
+    ),
 )
 def test_linked_list_reverse_non_empty_list(itr: Iterable):
     llst = LinkedList(itr)
@@ -513,7 +506,7 @@ def test_linked_list_clear(l0: LinkedList, l1: LinkedList, l2: LinkedList):
     assert l1.is_empty()
     l2.clear()
     assert l2.is_empty()
-    
+
 
 @pytest.mark.parametrize(
     "wrong_index",
@@ -677,3 +670,122 @@ def test_linked_list_getitem_slice_indices_inside_range_step_greater_than_one(
                 assert node == llst[count]
                 count += step
 
+
+def test_linked_list_split_no_index_empty_list(l0: LinkedList):
+    assert isinstance(l0.split(), Tuple)  # type: ignore[arg-type]
+    h1, h2 = l0.split()
+    assert h1 == h2 == l0
+
+
+def test_linked_list_split_no_index_one_item(l1: LinkedList):
+    assert isinstance(l1.split(), Tuple)  # type: ignore[arg-type]
+    h1, h2 = l1.split()
+    assert h1 == l1 != h2
+    assert h2.is_empty()
+
+
+@pytest.mark.parametrize(
+    "llst",
+    (
+        LinkedList((i for i in range(200))),
+        LinkedList({i: i for i in range(535)}),
+        LinkedList(
+            tuple((chr(i) for i in (randint(0, 1000) for _ in range(1000))))
+        ),
+        LinkedList(
+            tuple((chr(i) for i in (randint(0, 1000) for _ in range(1001))))
+        ),
+    ),
+)
+def test_linked_list_split_no_index_more_than_one_item(llst: LinkedList):
+    assert isinstance(llst.split(), Tuple)  # type: ignore[arg-type]
+    h1, h2 = llst.split()
+    assert h1 != llst != h2
+    if llst.size % 2 == 0:
+        assert h1.size == h2.size == llst.size // 2
+    else:
+        assert h1.size == h2.size - 1
+        assert h1.size + h2.size == llst.size
+
+
+@pytest.mark.parametrize(
+    "wrong_index",
+    ("a", b"abc", [1, 2, 3], {}, bytearray([1, 2, 3]), True, False),
+)
+def test_linked_list_split_wrong_index_type(l2: LinkedList, wrong_index):
+    with pytest.raises(TypeError):
+        l2.split(wrong_index)
+
+
+def test_linked_list_split_with_index_empty_list(l0: LinkedList):
+    assert isinstance(l0.split(10), Tuple)  # type: ignore[arg-type]
+    h1, h2 = l0.split(10)
+    assert h1 == h2 == l0
+    assert h1.is_empty() and h2.is_empty()
+
+
+def test_linked_list_split_with_index_zero(l2: LinkedList):
+    h1, h2 = l2.split(0)
+    assert h1.is_empty()
+    assert h2 == l2
+
+
+@pytest.mark.parametrize(
+    "llst",
+    (
+        LinkedList((i for i in range(200))),
+        LinkedList({i: i for i in range(535)}),
+        LinkedList(
+            tuple((chr(i) for i in (randint(0, 1000) for _ in range(1000))))
+        ),
+        LinkedList(
+            tuple((chr(i) for i in (randint(0, 1000) for _ in range(1001))))
+        ),
+    ),
+)
+def test_linked_list_split_with_max_index(llst: LinkedList):
+    index = llst.size - 1
+    h1, h2 = llst.split(index)
+    assert h1 == llst[:index]
+    assert h2.head == llst.tail
+
+
+@pytest.mark.parametrize(
+    "llst",
+    (
+        LinkedList((i for i in range(200))),
+        LinkedList({i: i for i in range(535)}),
+        LinkedList(
+            tuple((chr(i) for i in (randint(0, 1000) for _ in range(1000))))
+        ),
+        LinkedList(
+            tuple((chr(i) for i in (randint(0, 1000) for _ in range(1001))))
+        ),
+    ),
+)
+def test_linked_list_split_with_index_same_or_bigger_than_size(
+    llst: LinkedList,
+):
+    index = randint(llst.size, llst.size + 100)
+    with pytest.raises(IndexError):
+        llst.split(index)
+
+
+@pytest.mark.parametrize(
+    "llst",
+    (
+        LinkedList((i for i in range(50))),
+        LinkedList({i: i for i in range(335)}),
+        LinkedList(
+            tuple((chr(i) for i in (randint(0, 1000) for _ in range(500))))
+        ),
+        LinkedList(
+            tuple((chr(i) for i in (randint(0, 1000) for _ in range(501))))
+        ),
+    ),
+)
+def test_linked_list_split_with_any_valid_index(llst: LinkedList):
+    for i in (randint(0, llst.size - 1) for _ in range(int(llst.size * 0.1))):
+        h1, h2 = llst.split(i)
+        assert h1 == llst[:i]
+        assert h2 == llst[i:]

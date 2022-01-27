@@ -228,8 +228,8 @@ class LinkedList(MutableSequence):
         if n < 2:
             left_half, right_half = self, LinkedList()
         else:
-            mid = n // 2 if not index else index
-            left_half, right_half = self.copy(_until=mid - 1), self.copy(mid)
+            mid = n // 2 if index is None else index
+            left_half, right_half = self.copy(_until=mid), self.copy(mid)
         return left_half, right_half
 
     def sort(self) -> "LinkedList":
