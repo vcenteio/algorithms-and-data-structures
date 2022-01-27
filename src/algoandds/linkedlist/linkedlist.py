@@ -52,11 +52,11 @@ class LinkedList(MutableSequence):
     def is_empty(self):
         return self.head is None
 
-    def count(self, item) -> int:
+    def count(self, value: Any) -> int:
         current = self.head
         count = 0
         while current:
-            if current.data == item:
+            if current.data == value:
                 count += 1
             current = current.next_node
         return count
