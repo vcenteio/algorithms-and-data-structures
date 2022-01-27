@@ -197,7 +197,7 @@ class LinkedList(MutableSequence):
             )
         if not self._is_valid_int(_until) and _until is not None:
             raise TypeError(
-                f"Wrong type {get_class_name(_from)} for _until parameter."
+                f"Wrong type {get_class_name(_until)} for _until parameter."
             )
         new_list = LinkedList()
         if self.is_empty():
