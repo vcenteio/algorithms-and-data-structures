@@ -53,6 +53,7 @@ class LinkedList(MutableSequence):
         return self.head is None
 
     def count(self, value: Any) -> int:
+        """Return the number of occurrences of value."""
         current = self.head
         count = 0
         while current:
