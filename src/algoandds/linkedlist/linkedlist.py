@@ -338,42 +338,53 @@ class LinkedList(MutableSequence):
     def __bool__(self) -> bool:
         return self.size != 0
 
-    def _get_item(self, index: int, start_node: INode = None):
-        if self.is_empty():
-            raise IndexError("Cannot get item from empty list.")
-        n = self.size
+    @staticmethod
+    def _is_index_outside_range(index: int, max: int) -> bool:
         # index + n is considered to accomodate for
         # negative index values.
-        if index >= n or index + n < 0:
+        return index >= max or index + max < 0
+
+    def _get_item_from_index(self, index: int, start_node: INode = None):
+        if self.is_empty():
+            raise IndexError("get item from empty list")
+        n = self.size
+        if self._is_index_outside_range(index, n):
             raise IndexError(f"Sequence index {index} out of range.")
         if index < 0:
             index += n
-        current = start_node if start_node else self.head
+        current = start_node if start_node is not None else self.head
         count = 0
         while count < index and current is not None:
             count += 1
             current = current.next_node
         return current
 
-    def __getitem__(self, index: Union[int, slice]):
-        if isinstance(index, int) and not isinstance(index, bool):
-            return self._get_item(index)
-        elif isinstance(index, slice):
-            start, stop, step = index.indices(self.size)
-            if step < 1:
-                raise ValueError("Step value must be >= 1.")
-            current = self._get_item(start)
-            new_list = LinkedList(self._create_new_node(current))
+    def _get_list_from_slice(self, slice: slice):
+        if self.is_empty():
+            raise IndexError("get item from empty list")
+        start, stop, step = slice.indices(self.size)
+        if step < 1:
+            raise ValueError("Step value must be >= 1.")
+        new_list = LinkedList()
+        if start < stop:
+            current = self._get_item_from_index(start)
+            new_list.append(current)
             count = start + step
             while count < stop:
                 count += step
-                current = self._get_item(step, current)
-                new_list.append(self._create_new_node(current))
-            return new_list
+                current = self._get_item_from_index(step, current)
+                new_list.append(current)
+        return new_list
+
+    def __getitem__(self, index: Union[int, slice]):
+        if self._is_valid_int(index):
+            return self._get_item_from_index(index)  # type: ignore[arg-type]
+        elif isinstance(index, slice):
+            return self._get_list_from_slice(index)
         else:
             raise TypeError(
-                "Index should be an int or a slice object, "
-                f"not {get_class_name(index)}."
+                "index should be an int or a slice object, "
+                f"not {get_class_name(index)}"
             )
 
     @overload

@@ -514,3 +514,166 @@ def test_linked_list_clear(l0: LinkedList, l1: LinkedList, l2: LinkedList):
     l2.clear()
     assert l2.is_empty()
     
+
+@pytest.mark.parametrize(
+    "wrong_index",
+    ("a", b"abc", [1, 2, 3], {}, {1: 2, 3: 4}, bytearray((1, 2, 3))),
+)
+def test_linked_list_getitem_wrong_type(l0: LinkedList, wrong_index):
+    with pytest.raises(TypeError):
+        l0[wrong_index]
+
+
+def test_getitem_empty_list(l0: LinkedList):
+    with pytest.raises(IndexError):
+        l0[8]
+    with pytest.raises(IndexError):
+        l0[0:]
+    with pytest.raises(IndexError):
+        l0[:0]
+
+
+random_gen_k_items = (randint(0, 1000) for _ in range(1000))
+
+
+@pytest.mark.parametrize(
+    ("llst", "indices"),
+    (
+        [LinkedList((i for i in range(200))), (200, 201, -201)],
+        [LinkedList({i for i in range(535)}), (535, 536, -536)],
+        [
+            LinkedList((chr(i) for i in random_gen_k_items)),
+            (1000, 1001, -1001),
+        ],
+    ),
+)
+def test_linked_list_getitem_int_index_out_of_range(llst: LinkedList, indices):
+    for i in indices:
+        with pytest.raises(IndexError):
+            llst[i]
+
+
+@pytest.mark.parametrize(
+    ("llst", "indices"),
+    (
+        [
+            LinkedList((i for i in range(200))),
+            [randint(-200, 199) for _ in range(10)],
+        ],
+        [
+            LinkedList((i for i in range(535))),
+            [randint(-535, 534) for _ in range(10)],
+        ],
+        [
+            LinkedList([chr(i) for i in range(1000)]),
+            [randint(-1000, 999) for _ in range(10)],
+        ],
+    ),
+)
+def test_linked_list_getitem_int_index_inside_range(llst: LinkedList, indices):
+    for i in indices:
+        item = llst[i]
+        found_item = None
+        count = 0
+        for node in llst:
+            if node == item:
+                found_item = node
+                break
+            count += 1
+        assert found_item is not None
+        assert count == (i if i >= 0 else i + llst.size)
+
+
+def test_linked_list_getitem_slice_invalid_step(l1: LinkedList):
+    with pytest.raises(ValueError):
+        l1[::0]
+    with pytest.raises(ValueError):
+        l1[::-1]
+
+
+def test_linked_list_getitem_slice_start_equal_or_greater_than_stop(
+    l2: LinkedList,
+):
+    for i in range(0, 20, 2):
+        assert l2[i:i].is_empty()
+        assert l2[i + 1: i].is_empty()
+
+
+@pytest.mark.parametrize(
+    ("llst", "indices"),
+    (
+        [
+            LinkedList((i for i in range(200))),
+            [(-201, None), (None, 500), (-500, 500)],
+        ],
+        [LinkedList((i for i in range(535))), [(-536, 535), (-1000, 1000)]],
+        [
+            LinkedList([chr(i) for i in range(1000)]),
+            [(-2000, 1001), (-1001, 10000)],
+        ],
+    ),
+)
+def test_linked_list_getitem_slice_indices_out_of_range(
+    llst: LinkedList, indices
+):
+    for start, stop in indices:
+        full_list = llst[start:stop]
+        assert llst == full_list
+
+
+@pytest.mark.parametrize(
+    ("llst", "indices"),
+    (
+        [
+            LinkedList((i for i in range(200))),
+            [
+                (i1 := randint(0, 199), randint(0, i1 - 1)),
+                (i2 := randint(51, 199), randint(50, i2 - 1)),
+            ],
+        ],
+        [
+            LinkedList((i for i in range(1000))),
+            [
+                (i1 := randint(0, 999), randint(0, i1 - 1)),
+                (i2 := randint(501, 700), randint(50, i2 - 1)),
+            ],
+        ],
+    ),
+)
+def test_linked_list_getitem_slice_indices_inside_range_step_equals_one(
+    llst: LinkedList, indices
+):
+    for stop, start in indices:
+        assert llst[start:stop] == llst.copy(start, stop)
+
+
+@pytest.mark.parametrize(
+    ("llst", "indices"),
+    (
+        [
+            LinkedList((i for i in range(200))),
+            [
+                (i1 := randint(0, 199), randint(0, i1 - 1)),
+                (i2 := randint(51, 199), randint(50, i2 - 1)),
+            ],
+        ],
+        [
+            LinkedList((i for i in range(1000))),
+            [
+                (i1 := randint(0, 999), randint(0, i1 - 1)),
+                (i2 := randint(501, 700), randint(50, i2 - 1)),
+            ],
+        ],
+    ),
+)
+def test_linked_list_getitem_slice_indices_inside_range_step_greater_than_one(
+    llst: LinkedList, indices
+):
+    for stop, start in indices:
+        for step in range(2, 5):
+            sliced_list = llst[start:stop:step]
+            count = start
+            for node in sliced_list:
+                assert node == llst[count]
+                count += step
+
