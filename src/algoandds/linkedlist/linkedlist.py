@@ -233,43 +233,48 @@ class LinkedList(MutableSequence):
             left_half, right_half = self.copy(_until=mid), self.copy(mid)
         return left_half, right_half
 
-    def sort(self) -> "LinkedList":
+    def _append_left_over_items(self, currentA, currentB) -> None:
+        while currentA:
+            self.append(currentA)
+            currentA = currentA._next
+        while currentB:
+            self.append(currentB)
+            currentB = currentB._next
+
+    @staticmethod
+    def _merge_sorted_lists_into_sorted_list(
+        listA: "LinkedList", listB: "LinkedList"
+    ) -> "LinkedList":
+        if listA.tail < listB.head:
+            listA.tail.set_next_node(listB.head)
+            sorted_list = LinkedList(listA.head)
+        else:
+            sorted_list = LinkedList()
+            current_A, current_B = listA.head, listB.head
+            while current_A and current_B:
+                if current_A <= current_B:
+                    sorted_list.append(current_A)
+                    current_A = current_A._next
+                else:
+                    sorted_list.append(current_B)
+                    current_B = current_B._next
+            sorted_list._append_left_over_items(current_A, current_B)
+        return sorted_list
+
+    def sort(self) -> None:
         n = self.size
         if n < 2:
-            return self
+            return
         elif n == 2 and self.head is not None:
             if self.head > self.head._next and self.head._next is not None:
                 a, b = self.head._next.data, self.head.data
                 self.head.data, self.head._next.data = a, b
-            return self
         else:
-            left_half, right_half = self.split()
-            list_A, list_B = left_half.sort(), right_half.sort()
-            if list_A.tail < list_B.head:
-                new_list = list_A + list_B
-            else:
-                new_list = LinkedList()
-                current_A, current_B = list_A.head, list_B.head
-                while current_A and current_B:
-                    if current_A <= current_B:
-                        new_list.append(current_A)
-                        current_A = current_A._next
-                    else:
-                        new_list.append(current_B)
-                        current_B = current_B._next
-                while current_A:
-                    new_list.append(current_A)
-                    current_A = current_A._next
-                while current_B:
-                    new_list.append(current_B)
-                    current_B = current_B._next
-            self.clear()
-            current = new_list.head
-            while current:
-                self.append(current)
-                current = current._next
-            del new_list
-            return self
+            listA, listB = self.split()
+            listA.sort()
+            listB.sort()
+            new_list = self._merge_sorted_lists_into_sorted_list(listA, listB)
+            self.head = new_list.head
 
     @staticmethod
     def _is_valid_iterable(itr: Any) -> bool:

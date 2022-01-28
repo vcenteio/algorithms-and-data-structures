@@ -866,11 +866,15 @@ def test_linked_list_split_with_any_valid_index(llst: LinkedList):
 
 
 def test_linked_list_sort_no_key_emtpy_list(l0: LinkedList):
-    assert l0.sort() == l0
+    l_copy = l0.copy()
+    l0.sort()
+    assert l0 == l_copy
 
 
 def test_linked_list_sort_no_key_one_item(l1: LinkedList):
-    assert l1.sort() == l1
+    l_copy = l1.copy()
+    l1.sort()
+    assert l1 == l_copy
 
 
 @pytest.mark.parametrize(
