@@ -942,3 +942,129 @@ def test_linked_list_sort_no_key_bytes(itr: Iterable):
 
     for i in range(len(itr)):  # type: ignore[arg-type]
         assert llst[i] == lst[i]
+
+
+@pytest.mark.parametrize(
+    "index", ("a", b"abc", True, False, [1, 2, 3], {}, type, int, slice)
+)
+def test_linked_list_setitem_wrong_index_type(l0: LinkedList, index):
+    with pytest.raises(TypeError):
+        l0[index] = 1
+
+
+def test_linked_list_setitem_int_index_empty_list(l0: LinkedList):
+    with pytest.raises(IndexError):
+        l0[0] = 1
+
+
+@pytest.mark.parametrize("index", (-21, 20, 30))
+def test_linked_list_setitem_int_index_out_of_range(l2: LinkedList, index):
+    with pytest.raises(IndexError):
+        l2[index] = 1
+
+
+@pytest.mark.parametrize(
+    ("index", "value"), [(0, 2), (5, 4), (19, 10), (17, "a"), (13, b"abc")]
+)
+def test_linked_list_setitem_int_index_inside_range(
+    l2: LinkedList, index, value
+):
+    l2[index] = value
+    assert l2[index] == value
+
+
+@pytest.mark.parametrize("value", (1, type, LinkedList, Tuple))
+def test_linked_list_setitem_slice_index_non_iterable_value(
+    l2: LinkedList, value
+):
+    with pytest.raises(TypeError):
+        l2[:] = value
+
+
+def test_linked_list_setitem_slice_index_negative_step(l2: LinkedList):
+    with pytest.raises(NotImplementedError):
+        l2[::-1] = [1]
+
+
+@pytest.mark.parametrize(
+    ("start", "stop", "value"),
+    [(-21, 5, [10]), (15, 22, [5]), (19, 100, [3, 4, 5])],
+)
+def test_linked_list_setitem_slice_index_single_step_indices_out_of_range(
+    l2: LinkedList, start, stop, value
+):
+    lst = list(l2)
+    l2[start:stop] = value
+    lst[start:stop] = value
+    assert l2 == LinkedList(lst)
+
+
+@pytest.mark.parametrize(
+    ("start", "stop", "value"),
+    [(6, 5, [10]), (15, 14, [5]), (19, 19, [3, 4, 5]), (11, 11, [5, 4, 3])],
+)
+def test_linked_list_setitem_slice_index_single_step_start_ge_stop(
+    l2: LinkedList, start, stop, value
+):
+    lst = list(l2)
+    l2[start:stop] = value
+    lst[start:stop] = value
+    assert l2 == LinkedList(lst)
+
+
+@pytest.mark.parametrize(
+    ("start", "stop", "value"),
+    [(3, 5, [10]), (10, 14, [5]), (18, 19, [3, 4, 5]), (0, 19, [5, 4, 3])],
+)
+def test_linked_list_setitem_slice_index_single_step_start_lt_stop(
+    l2: LinkedList, start, stop, value
+):
+    lst = list(l2)
+    l2[start:stop] = value
+    lst[start:stop] = value
+    assert l2 == LinkedList(lst)
+
+
+@pytest.mark.parametrize(
+    ("start", "stop", "step", "value"),
+    [
+        (3, 5, 2, [10, 11]),
+        (10, 14, 3, [5]),
+        (5, 19, 4, [4, 5]),
+        (0, 19, 20, [5, 4, 3]),
+    ],
+)
+def test_linked_list_setitem_slice_index_multistep_wrong_iter(
+    l2: LinkedList, start, stop, step, value
+):
+    with pytest.raises(ValueError):
+        l2[start:stop:step] = value
+
+
+@pytest.mark.parametrize(
+    ("start", "stop", "step", "value"),
+    [(5, 5, 2, [10]), (15, 14, 3, [5]), (10, 8, 4, [4]), (19, 16, 20, [-19])],
+)
+def test_linked_list_setitem_slice_index_multistep_start_ge_stop(
+    l2: LinkedList, start, stop, step, value
+):
+    with pytest.raises(ValueError):
+        l2[start:stop:step] = value
+
+
+@pytest.mark.parametrize(
+    ("start", "stop", "step", "value"),
+    [
+        (3, 8, 2, [10, 11, 12]),
+        (10, 18, 3, [5, 6, 7]),
+        (0, 19, 4, [1, 2, 3, 4, 5]),
+        (0, 19, 20, [1]),
+    ],
+)
+def test_linked_list_setitem_slice_index_multistep_start_lt_stop(
+    l2: LinkedList, start, stop, step, value
+):
+    lst = list(l2)
+    l2[start:stop:step] = value
+    lst[start:stop:step] = value
+    assert l2 == LinkedList(lst)
