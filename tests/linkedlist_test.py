@@ -1,6 +1,6 @@
-from typing import Iterable, Tuple
 import pytest
-from random import randint
+from typing import Iterable, Tuple
+from random import randint, choice
 
 from src.algoandds.linkedlist import LinkedList, Node, INode
 
@@ -663,7 +663,7 @@ def test_linked_list_getitem_slice_start_equal_or_greater_than_stop(
 ):
     for i in range(0, 20, 2):
         assert l2[i:i].is_empty()
-        assert l2[i + 1: i].is_empty()
+        assert l2[i + 1 : i].is_empty()  # noqa: E203
 
 
 @pytest.mark.parametrize(
@@ -863,3 +863,78 @@ def test_linked_list_split_with_any_valid_index(llst: LinkedList):
         h1, h2 = llst.split(i)
         assert h1 == llst[:i]
         assert h2 == llst[i:]
+
+
+def test_linked_list_sort_no_key_emtpy_list(l0: LinkedList):
+    assert l0.sort() == l0
+
+
+def test_linked_list_sort_no_key_one_item(l1: LinkedList):
+    assert l1.sort() == l1
+
+
+@pytest.mark.parametrize(
+    "llst",
+    (
+        LinkedList((choice((int, str))(i) for i in range(20))),
+        LinkedList((choice((int, bytes))(i) for i in range(20))),
+        LinkedList((choice((str, bytes))(i) for i in range(20))),
+    ),
+)
+def test_linked_list_sort_no_key_mixed_types(llst: LinkedList):
+    with pytest.raises(TypeError):
+        llst.sort()
+
+
+@pytest.mark.parametrize(
+    "itr",
+    [
+        [randint(-100, 100) for _ in range(50)],
+        {randint(0, 1000): i for i in range(335)},
+        tuple((randint(0, 1000) for _ in range(1000))),
+    ],
+)
+def test_linked_list_sort_no_key_ints(itr: Iterable):
+    lst = list(itr)
+    lst.sort()
+    llst = LinkedList(itr)
+    llst.sort()
+
+    for i in range(len(itr)):  # type: ignore[arg-type]
+        assert llst[i] == lst[i]
+
+
+@pytest.mark.parametrize(
+    "itr",
+    [
+        [chr(randint(0, 100)) for _ in range(50)],
+        {chr(randint(0, 1000)): i for i in range(335)},
+        tuple((chr(randint(0, 1000)) for _ in range(1000))),
+    ],
+)
+def test_linked_list_sort_no_key_strs(itr: Iterable):
+    lst = list(itr)
+    lst.sort()
+    llst = LinkedList(itr)
+    llst.sort()
+
+    for i in range(len(itr)):  # type: ignore[arg-type]
+        assert llst[i] == lst[i]
+
+
+@pytest.mark.parametrize(
+    "itr",
+    [
+        [bytes(randint(0, 100)) for _ in range(50)],
+        {bytes(randint(0, 1000)): i for i in range(335)},
+        tuple((bytes(randint(0, 1000)) for _ in range(1000))),
+    ],
+)
+def test_linked_list_sort_no_key_bytes(itr: Iterable):
+    lst = list(itr)
+    lst.sort()
+    llst = LinkedList(itr)
+    llst.sort()
+
+    for i in range(len(itr)):  # type: ignore[arg-type]
+        assert llst[i] == lst[i]
