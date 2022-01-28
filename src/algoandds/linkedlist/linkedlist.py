@@ -1,5 +1,5 @@
 import sys
-from typing import Any, Union, Tuple, Optional, overload
+from typing import Any, Union, Tuple, Optional
 from collections.abc import MutableSequence, Iterable
 
 from .node import INode, Node
@@ -393,50 +393,61 @@ class LinkedList(MutableSequence):
                 f"not {get_class_name(index)}"
             )
 
-    @overload
-    def __setitem__(self, index: int, value: Any) -> None:
-        ...
+    def _setitem_from_slice_multistep(
+        self, _iter: Iterable, _slice: slice
+    ) -> None:
+        start, stop, step = _slice.indices(self.size)
+        len_of_current_slice = len(range(start, stop, step))
+        len_of_new_slice = len(_iter)  # type: ignore[arg-type]
+        if len_of_current_slice != len_of_new_slice:
+            raise ValueError(
+                "attempt to assign sequence of size "
+                f"{len_of_new_slice} "
+                f"to extended slice of size {len_of_current_slice}"
+            )
+        i = start
+        for item in _iter:
+            self[i] = item
+            i += step
 
-    @overload
-    def __setitem__(self, index: slice, value: Iterable[Any]) -> None:
-        ...
+    def _setitem_from_slice_single_step(
+        self, _iter: Iterable, start: int, stop: int
+    ) -> None:
+        i = start
+        while i < stop:
+            self.pop(start)
+            i += 1
+        i = start
+        for item in _iter:
+            self.insert(i, item)
+            i += 1
 
-    def __setitem__(self, index, value) -> None:
-        if isinstance(index, int):
-            item = self.__getitem__(index)
-            item.data = value
-        elif isinstance(index, slice):
-            if not isinstance(value, Iterable):
-                raise TypeError("Can only assign an iterable.")
-            start, stop, step = index.indices(self.size)
-            if step < 0:
-                raise NotImplementedError(
-                    "Negative sequence indexes are not yet implemented."
-                )
-            if step == 1:
-                i = start
-                while i < stop:
-                    self.pop(start)
-                    i += 1
-                i = start
-                for item in value:
-                    self.insert(i, item)
-                    i += 1
-            else:
-                len_of_current_items = len(self[index])
-                len_of_new_items = len(value)  # type: ignore[arg-type]
-                if len_of_current_items != len_of_new_items:
-                    raise ValueError(
-                        "Attempt to assign sequence of size "
-                        f"{len_of_new_items} "
-                        f"to extended slice of size {len_of_current_items}."
-                    )
-                i = start
-                for item in value:
-                    self[i] = item
-                    i += step
+    def _setitem_from_slice(self, _slice: slice, _iter: Iterable) -> None:
+        if not isinstance(_iter, Iterable):
+            raise TypeError("can only assign an iterable")
+        start, stop, step = _slice.indices(self.size)
+        if step < 0:
+            raise NotImplementedError(
+                "negative sequence slices are not implemented"
+            )
+        if step == 1:
+            self._setitem_from_slice_single_step(_iter, start, stop)
         else:
-            raise TypeError(f"Wrong type for index: {get_class_name(index)}.")
+            self._setitem_from_slice_multistep(_iter, _slice)
+
+    def _setitem_from_int(self, index: int, value: Any) -> None:
+        item = self.__getitem__(index)
+        item.data = value
+
+    def __setitem__(
+        self, index: Union[int, slice], value: Union[Any, Iterable[Any]]
+    ) -> None:
+        if isinstance(index, int):
+            self._setitem_from_int(index, value)
+        elif isinstance(index, slice):
+            self._setitem_from_slice(index, value)
+        else:
+            raise TypeError(f"wrong type for index: {get_class_name(index)}")
 
     def _get_indices_from_slice(self, sl: slice):
         start, stop, step = sl.indices(len(self))
