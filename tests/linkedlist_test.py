@@ -1199,6 +1199,16 @@ def test_linked_list_delitem_slice_multistep_out_of_range(
 
 
 @pytest.mark.parametrize(
+    "_slice", (slice(0, 2, -2), slice(4, 7, -1), slice(15, 19, -10))
+)
+def test_linked_list_delitem_slice_multistep_negative_step(
+    l2: LinkedList, _slice: slice
+):
+    with pytest.raises(NotImplementedError):
+        del l2[_slice]
+
+
+@pytest.mark.parametrize(
     ("itr", "_slice"),
     [
         ([i for i in range(10)], slice(8, 2, 2)),
