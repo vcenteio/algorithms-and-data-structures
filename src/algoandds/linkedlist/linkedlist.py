@@ -506,3 +506,6 @@ class LinkedList(MutableSequence):
 
     def __repr__(self) -> str:
         return f"LinkedList({self._get_str_with_nodes_and_separator(True)})"
+
+    def __str__(self) -> str:
+        return f"[{self._get_str_with_nodes_and_separator()}]"
