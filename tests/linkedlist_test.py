@@ -1,6 +1,7 @@
 import pytest
-from typing import Generator, Iterable, Tuple
+from typing import Generator, Iterable, Tuple, Sized
 from random import randint, choice
+from secrets import token_bytes, token_urlsafe
 
 from src.algoandds.linkedlist import LinkedList, Node, INode
 
@@ -1293,3 +1294,70 @@ def test_linked_list_next(l0: LinkedList, l2: LinkedList):
         assert node == l2[i]
     with pytest.raises(StopIteration):
         next(l2)
+
+
+@pytest.mark.parametrize(
+    "value", (1, type, list, range, 1.5, None, True, False)
+)
+def test_linked_list_extend_wrong_type(l0: LinkedList, value):
+    with pytest.raises(TypeError):
+        l0.extend(value)
+
+
+@pytest.mark.parametrize(
+    "itr",
+    [
+        token_bytes(50),
+        token_urlsafe(50),
+        (i for i in range(10)),
+        [chr(i) for i in range(50)],
+        {randint(0, 1000) for _ in range(500)},
+    ],
+)
+def test_linked_list_extend_from_linked_list(l2: LinkedList, itr: Iterable):
+    new_llst = LinkedList(itr)
+    l2_initial = l2.copy()
+    l2.extend(new_llst)
+    assert l2.size == l2_initial.size + new_llst.size
+    for node in l2:
+        assert node in l2_initial or node in new_llst
+    for node in l2_initial:
+        assert node in l2
+    for node in new_llst:
+        assert node in l2
+
+
+@pytest.mark.parametrize(
+    "itr",
+    [
+        token_bytes(50),
+        token_urlsafe(50),
+        tuple((i for i in range(10))),
+        [chr(i) for i in range(50)],
+        {randint(0, 1000) for _ in range(500)},
+    ],
+)
+def test_linked_list_extend_from_other_iterables(
+    l2: LinkedList, itr: Iterable
+):
+    l2_initial = l2.copy()
+    l2_initial_size = l2_initial.size
+    assert isinstance(itr, Sized)
+    itr_size = len(itr)
+
+    l2.extend(itr)
+    assert l2.size == l2_initial.size + itr_size
+
+    count = 0
+    for node in l2:
+        if count < l2_initial_size:
+            assert node in l2_initial
+        else:
+            assert (
+                node.data if isinstance(itr, (str, bytes)) else node
+            ) in itr
+        count += 1
+    for node in l2_initial:
+        assert node in l2
+    for item in itr:
+        assert item in l2

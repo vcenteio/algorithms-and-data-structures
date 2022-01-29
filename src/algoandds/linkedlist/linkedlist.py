@@ -6,7 +6,7 @@ from .node import INode, Node
 from ..tools.tools import get_class_name
 
 
-MAXSIZE = sys.maxsize
+MAX_INT_SIZE = sys.maxsize
 
 
 class LinkedList(MutableSequence):
@@ -94,8 +94,20 @@ class LinkedList(MutableSequence):
             new_node.set_next_node(node_before.next_node)
             node_before.set_next_node(new_node)
 
-    def extend(self, values) -> None:
-        self += values
+    def extend(self, _iter: Iterable) -> None:
+        """Extend list by appending items from the iterable.
+
+        Strings and byte sequences are considered valid iterables.
+        """
+        if not isinstance(_iter, Iterable):
+            raise TypeError(
+                f"object of type {get_class_name(_iter)} is not iterable"
+            )
+        if isinstance(_iter, LinkedList):
+            self.tail.set_next_node(_iter.head)
+        else:
+            for item in _iter:
+                self.append(item)
 
     def _convert_indices(
         self, start: int, stop: int, step: Optional[int] = None
@@ -112,7 +124,9 @@ class LinkedList(MutableSequence):
             index += 1
         return None
 
-    def index(self, value: Any, start: int = 0, stop: int = MAXSIZE) -> int:
+    def index(
+        self, value: Any, start: int = 0, stop: int = MAX_INT_SIZE
+    ) -> int:
         if not self._is_valid_int(start) or not self._is_valid_int(stop):
             raise TypeError("Start and stop values must be integers.")
         start, stop, _ = self._convert_indices(start, stop)
