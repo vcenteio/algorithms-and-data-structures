@@ -1068,3 +1068,187 @@ def test_linked_list_setitem_slice_index_multistep_start_lt_stop(
     l2[start:stop:step] = value
     lst[start:stop:step] = value
     assert l2 == LinkedList(lst)
+
+
+@pytest.mark.parametrize(
+    "wrong_index", ("a", b"abc", True, False, [1, 2, 3], {}, type, int, slice)
+)
+def test_linked_list_delitem_wrong_index_type(l1: LinkedList, wrong_index):
+    with pytest.raises(TypeError):
+        del l1[wrong_index]
+
+
+def test_linked_list_delitem_empty_list(l0: LinkedList):
+    with pytest.raises(IndexError):
+        del l0[0]
+
+
+@pytest.mark.parametrize("index", (-21, 20, 30, -100))
+def test_linked_list_delitem_int_index_out_of_range(l2: LinkedList, index):
+    with pytest.raises(IndexError):
+        del l2[index]
+
+
+@pytest.mark.parametrize(
+    ("itr", "indices"),
+    [
+        ([i for i in range(10)], (randint(-10, 9) for _ in range(5))),
+        ([chr(i) for i in range(20)], (randint(-20, 19) for _ in range(5))),
+        ([bytes(i) for i in range(50)], (randint(-50, 49) for _ in range(5))),
+    ],
+)
+def test_linked_list_delitem_int_valid_index(itr: Iterable, indices):
+    llst = LinkedList(itr)
+    count = 0
+    for i in indices:
+        i = i - count if i >= 0 else i + count
+        deleted_item = llst[i]
+        del llst[i]
+        count += 1
+        assert deleted_item not in llst
+
+
+@pytest.mark.parametrize(("start", "stop"), [(-22, 5), (10, 100), (19, 21)])
+def test_linked_list_delitem_slice_single_step_out_of_range(
+    l2: LinkedList, start, stop
+):
+    lst = list(map(lambda x: x.data, l2))
+    deleted_items = map(lambda x: x.data, l2[start:stop])
+    del l2[start:stop]
+    del lst[start:stop]
+    assert l2 == LinkedList(lst)
+    for item in deleted_items:
+        assert item not in l2
+
+
+@pytest.mark.parametrize(
+    ("itr", "_slice"),
+    [
+        ([i for i in range(10)], slice(8, 7)),
+        ([chr(i) for i in range(20)], slice(10, 4)),
+        ([bytes(i) for i in range(50)], slice(49, 30)),
+    ],
+)
+def test_linked_list_delitem_slice_single_step_start_ge_stop(
+    itr: Iterable, _slice
+):
+    lst = list(itr)
+    llst = LinkedList(itr)
+    deleted_items = tuple(map(lambda x: x.data, llst[_slice]))
+    assert len(deleted_items) == 0
+    lst_previous_size = len(lst)
+    llst_previous_size = len(llst)
+    del lst[_slice]
+    del llst[_slice]
+    assert llst == LinkedList(lst)
+    assert len(llst) == llst_previous_size == len(lst) == lst_previous_size
+
+
+@pytest.mark.parametrize(
+    ("itr", "_slice"),
+    [
+        ([i for i in range(10)], slice(4, 7)),
+        ([chr(i) for i in range(20)], slice(1, 16)),
+        ([bytes(i) for i in range(50)], slice(15, 38)),
+    ],
+)
+def test_linked_list_delitem_slice_single_step_start_lt_stop(
+    itr: Iterable, _slice: slice
+):
+    lst = list(itr)
+    llst = LinkedList(itr)
+    deleted_items = tuple(map(lambda x: x.data, llst[_slice]))
+    del lst[_slice]
+    del llst[_slice]
+    assert llst == LinkedList(lst)
+    for item in deleted_items:
+        assert item not in llst
+
+
+@pytest.mark.parametrize(
+    ("itr", "_slice"),
+    [
+        ([i for i in range(10)], slice(-11, 7, 2)),
+        ([chr(i) for i in range(20)], slice(1, 21, 3)),
+        ([bytes(i) for i in range(50)], slice(15, 38, 5)),
+    ],
+)
+def test_linked_list_delitem_slice_multistep_out_of_range(
+    itr: Iterable, _slice: slice
+):
+    slice_size = len(
+        range(*(_slice.indices(len(itr))))  # type: ignore[arg-type]
+    )
+    lst = list(itr)
+    llst = LinkedList(itr)
+    deleted_items = tuple(map(lambda x: x.data, llst[_slice]))
+    assert slice_size == len(deleted_items)
+    lst_previous_size = len(lst)
+    llst_previous_size = len(llst)
+    del lst[_slice]
+    del llst[_slice]
+    assert llst == LinkedList(lst)
+    for item in deleted_items:
+        assert item not in llst
+    assert (
+        len(llst)
+        == len(lst)
+        == lst_previous_size - slice_size
+        == llst_previous_size - slice_size
+    )
+
+
+@pytest.mark.parametrize(
+    ("itr", "_slice"),
+    [
+        ([i for i in range(10)], slice(8, 2, 2)),
+        ([chr(i) for i in range(20)], slice(10, 4, 4)),
+        ([bytes(i) for i in range(50)], slice(49, 30, 5)),
+    ],
+)
+def test_linked_list_delitem_slice_multistep_start_ge_stop(
+    itr: Iterable, _slice
+):
+    lst = list(itr)
+    llst = LinkedList(itr)
+    deleted_items = tuple(map(lambda x: x.data, llst[_slice]))
+    assert len(deleted_items) == 0
+    lst_previous_size = len(lst)
+    llst_previous_size = len(llst)
+    del lst[_slice]
+    del llst[_slice]
+    assert llst == LinkedList(lst)
+    assert len(llst) == llst_previous_size == len(lst) == lst_previous_size
+
+
+@pytest.mark.parametrize(
+    ("itr", "_slice"),
+    [
+        ([i for i in range(10)], slice(1, 7, 2)),
+        ([chr(i) for i in range(20)], slice(3, 16, 3)),
+        ([bytes(i) for i in range(50)], slice(15, 38, 6)),
+    ],
+)
+def test_linked_list_delitem_slice_multistep_start_lt_stop(
+    itr: Iterable, _slice: slice
+):
+    slice_size = len(
+        range(*(_slice.indices(len(itr))))  # type: ignore[arg-type]
+    )
+    lst = list(itr)
+    llst = LinkedList(itr)
+    deleted_items = tuple(map(lambda x: x.data, llst[_slice]))
+    assert slice_size == len(deleted_items)
+    lst_previous_size = len(lst)
+    llst_previous_size = len(llst)
+    del lst[_slice]
+    del llst[_slice]
+    assert llst == LinkedList(lst)
+    for item in deleted_items:
+        assert item not in llst
+    assert (
+        len(llst)
+        == len(lst)
+        == lst_previous_size - slice_size
+        == llst_previous_size - slice_size
+    )
