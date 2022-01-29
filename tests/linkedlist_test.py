@@ -1278,3 +1278,18 @@ def test_linked_list_iter_non_empty_list(l2: LinkedList):
     assert len(tuple(_iter)) == l2.size
     for node in l2:
         assert node in l2
+
+
+def test_linked_list_next(l0: LinkedList, l2: LinkedList):
+    with pytest.raises(StopIteration):
+        next(l0)
+    for i in range(l2.size):
+        node = next(l2)
+        assert node == l2[i]
+    with pytest.raises(StopIteration):
+        next(l2)
+    for i in range(l2.size):
+        node = next(l2)
+        assert node == l2[i]
+    with pytest.raises(StopIteration):
+        next(l2)
