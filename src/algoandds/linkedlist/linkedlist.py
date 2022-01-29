@@ -449,26 +449,26 @@ class LinkedList(MutableSequence):
         else:
             raise TypeError(f"wrong type for index: {get_class_name(index)}")
 
-    def _get_indices_from_slice(self, sl: slice):
-        start, stop, step = sl.indices(len(self))
+    def _get_range_from_slice(self, _slice: slice) -> range:
+        start, stop, step = _slice.indices(len(self))
         if step < 0:
             raise NotImplementedError(
-                "Negative sequence indexes are not yet implemented."
+                "negative sequence indexes are not implemented"
             )
-        return tuple(range(start, stop, step))
+        return range(start, stop, step)
 
     def __delitem__(self, index: Union[int, slice]) -> None:
         if isinstance(index, int):
             self.pop(index)
         elif isinstance(index, slice):
-            indices = self._get_indices_from_slice(index)
+            indices_range = self._get_range_from_slice(index)
             number_of_poped_items = 0
-            for i in indices:
+            for i in indices_range:
                 i -= number_of_poped_items
                 self.pop(i)
                 number_of_poped_items += 1
         else:
-            raise TypeError(f"Wrong type for index: {get_class_name(index)}.")
+            raise TypeError(f"wrong type for index: {get_class_name(index)}")
 
     def _generator(self):
         current = self.head
