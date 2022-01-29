@@ -1,5 +1,5 @@
 import pytest
-from typing import Iterable, Tuple
+from typing import Generator, Iterable, Tuple
 from random import randint, choice
 
 from src.algoandds.linkedlist import LinkedList, Node, INode
@@ -1262,3 +1262,19 @@ def test_linked_list_delitem_slice_multistep_start_lt_stop(
         == lst_previous_size - slice_size
         == llst_previous_size - slice_size
     )
+
+
+def test_linked_list_iter_empty_list(l0: LinkedList):
+    _iter = l0.__iter__()
+    assert isinstance(_iter, Generator)
+    assert len(tuple(_iter)) == l0.size
+    for node in l0:
+        assert node in l0
+
+
+def test_linked_list_iter_non_empty_list(l2: LinkedList):
+    _iter = l2.__iter__()
+    assert isinstance(_iter, Generator)
+    assert len(tuple(_iter)) == l2.size
+    for node in l2:
+        assert node in l2
