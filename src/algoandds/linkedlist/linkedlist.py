@@ -499,10 +499,10 @@ class LinkedList(MutableSequence):
                 return False
         return True
 
-    def __repr__(self):
-        nodes = []
-        current = self.head
-        while current:
-            nodes.append(f"{current.data}")
-            current = current.next_node
-        return " -> ".join(nodes)
+    def _get_str_with_nodes_and_separator(self, _repr=False) -> str:
+        str_nodes = map(str if not _repr else repr, self)  # type: ignore
+        sep = " -> "
+        return sep.join(str_nodes)
+
+    def __repr__(self) -> str:
+        return f"LinkedList({self._get_str_with_nodes_and_separator(True)})"
