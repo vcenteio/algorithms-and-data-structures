@@ -1361,3 +1361,87 @@ def test_linked_list_extend_from_other_iterables(
         assert node in l2
     for item in itr:
         assert item in l2
+
+
+@pytest.mark.parametrize(
+    "value", ([1, 2, 3], (1, 2), {}, 1, range, 1.5, None, True, False)
+)
+def test_linked_list_add_radd_iadd_wrong_type(l0: LinkedList, value):
+    with pytest.raises(TypeError):
+        l0 + value
+    with pytest.raises(TypeError):
+        value + l0
+    with pytest.raises(TypeError):
+        l0 += value
+
+
+@pytest.mark.parametrize(
+    "itr",
+    [
+        tuple(token_bytes(50)),
+        tuple(token_urlsafe(50)),
+        tuple((i for i in range(10))),
+        [chr(i) for i in range(50)],
+        {randint(0, 1000) for _ in range(500)},
+    ],
+)
+def test_linked_list_add_other_linked_list(l2: LinkedList, itr):
+    llst = LinkedList(itr)
+    l2_size = l2.size
+    new_list = l2 + llst
+    count = 0
+    for node in new_list:
+        if count < l2_size:
+            assert node in l2
+        else:
+            assert node in llst
+        count += 1
+
+
+@pytest.mark.parametrize(
+    "itr",
+    [
+        tuple(token_bytes(50)),
+        tuple(token_urlsafe(50)),
+        tuple((i for i in range(10))),
+        [chr(i) for i in range(50)],
+        {randint(0, 1000) for _ in range(500)},
+    ],
+)
+def test_linked_list_radd_other_linked_list(l2: LinkedList, itr):
+    llst = LinkedList(itr)
+    llst_size = llst.size
+    new_list = l2.__radd__(llst)
+    count = 0
+    for node in new_list:
+        if count < llst_size:
+            assert node in llst
+        else:
+            assert node in l2
+        count += 1
+
+
+@pytest.mark.parametrize(
+    "itr",
+    [
+        tuple(token_bytes(50)),
+        tuple(token_urlsafe(50)),
+        tuple((i for i in range(10))),
+        [chr(i) for i in range(50)],
+        {randint(0, 1000) for _ in range(500)},
+    ],
+)
+def test_linked_list_iadd_other_linked_list(l2: LinkedList, itr):
+    llst = LinkedList(itr)
+    llst_size = llst.size
+    l2_copy = l2.copy()
+    l2_initial_size = l2.size
+    l2 += llst
+    assert l2.size == l2_initial_size + llst_size
+    count = 0
+    for node in l2:
+        if count < l2_initial_size:
+            assert node in l2_copy
+        else:
+            assert node in llst
+        count += 1

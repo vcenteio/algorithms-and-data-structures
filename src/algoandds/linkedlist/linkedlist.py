@@ -304,21 +304,36 @@ class LinkedList(MutableSequence):
                 "passed as argument."
             )
 
-    def _add_item(self, other: Any):
-        if self._is_valid_iterable(other):
-            self._add_from_iterable(other)
-        else:
-            self.append(other)
+    def _concatenate_linked_list(self, other: "LinkedList") -> None:
+        self.tail.set_next_node(other.head)
+
+    def _ensure_other_is_linked_list(func):
+        def wrapper(self, other):
+            if not isinstance(other, LinkedList):
+                raise TypeError(
+                    "can only concatenate a linked list to"
+                    f"another linkedlist, not '{get_class_name(other)}'"
+                )
+            return func(self, other)  # type: ignore[operator]
+
+        return wrapper
+
+    @_ensure_other_is_linked_list  # type: ignore[arg-type]
+    def __add__(self, other: "LinkedList"):
+        new_list = self.copy()
+        new_list._concatenate_linked_list(other)
+        return new_list
+
+    @_ensure_other_is_linked_list  # type: ignore[arg-type]
+    def __radd__(self, other: "LinkedList"):
+        new_list = other.copy()
+        new_list._concatenate_linked_list(self)
+        return new_list
+
+    @_ensure_other_is_linked_list  # type: ignore[arg-type]
+    def __iadd__(self, other: "LinkedList"):
+        self._concatenate_linked_list(other)
         return self
-
-    def __add__(self, other: Any):
-        return self.copy()._add_item(other)
-
-    def __radd__(self, other: Any):
-        return self.copy()._add_item(other)
-
-    def __iadd__(self, other: Any):
-        return self._add_item(other)
 
     def _multiply(self, value: int):
         if not isinstance(value, int):
