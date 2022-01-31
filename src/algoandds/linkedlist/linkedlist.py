@@ -1,6 +1,6 @@
 import sys
 from typing import Any, Union, Tuple, Optional
-from collections.abc import MutableSequence, Iterable
+from collections.abc import MutableSequence, Iterable, Callable
 
 from .node import INode, Node
 from ..tools.tools import get_class_name
@@ -335,36 +335,36 @@ class LinkedList(MutableSequence):
         self._concatenate_linked_list(other.copy())
         return self
 
+    def _ensure_other_is_int(func: Callable):  # type: ignore[misc]
+        def wrapper(self, value: int):
+            if not isinstance(value, int):
+                raise TypeError(
+                    "can't multiply sequence "
+                    f"by non-int of type '{get_class_name(value)}'"
+                )
+            return func(self, value)
+        return wrapper
+
     def _multiply(self, value: int):
-        if not isinstance(value, int):
-            raise TypeError(
-                "Can't multiply sequence "
-                f"by non-int of type '{get_class_name(value)}'"
-            )
-        if value < 0:
-            raise ValueError(
-                "Multiplication of linked lists "
-                "by negative numbers is not suported."
-            )
-        if value == 0:
-            self.clear()
-            return self
-        if value == 1:
-            return self
         count = 1
-        copy = self.copy()
+        original_list = self.copy() if value > 1 else None
         while count < value:
-            self += copy
+            self += original_list
             count += 1
         return self
 
+    @_ensure_other_is_int
     def __mul__(self, other: int):
-        return self.copy()._multiply(other)
+        return self.copy()._multiply(other) if other > 0 else LinkedList()
 
     def __rmul__(self, other: int):
-        return self.copy()._multiply(other)
+        return self.__mul__(other)
 
+    @_ensure_other_is_int
     def __imul__(self, other: int):
+        if other < 1:
+            self.clear()
+            return self
         return self._multiply(other)
 
     def __len__(self) -> int:

@@ -1445,3 +1445,54 @@ def test_linked_list_iadd_other_linked_list(l2: LinkedList, itr):
         else:
             assert node in llst
         count += 1
+
+
+@pytest.mark.parametrize(
+    "value", ("a", b"b", (1, 2), [3, 4], {}, dict(), type, int)
+)
+def test_linked_list_mul_rmul_imul_wrong_type(l0: LinkedList, value):
+    with pytest.raises(TypeError):
+        l0 * value
+    with pytest.raises(TypeError):
+        value * l0
+    with pytest.raises(TypeError):
+        l0 *= value
+
+
+@pytest.mark.parametrize("value", (0, -1, -2))
+def test_linked_list_mul_value_lt_one(l2: LinkedList, value):
+    assert l2 * value == LinkedList()
+
+
+@pytest.mark.parametrize("value", (1, 2, 3, 4, 10))
+def test_linked_list_mul_value_ge_one(l2: LinkedList, value):
+    l2_copy = l2.copy()
+    multiplied_list = l2 * value
+    n = multiplied_list.size
+    assert n == l2.size * value
+    for node in l2:
+        assert multiplied_list.count(node) == value
+    assert l2 == l2_copy
+
+
+@pytest.mark.parametrize("value", (0, -1, -2))
+def test_linked_list_rmul_value_lt_one(l2: LinkedList, value):
+    assert value * l2 == l2 * value
+
+
+@pytest.mark.parametrize("value", (1, 2, 3, 4, 10))
+def test_linked_list_rmul_value_ge_one(l2: LinkedList, value):
+    assert value * l2 == l2 * value
+
+
+@pytest.mark.parametrize("value", (0, -1, -2))
+def test_linked_list_imul_value_lt_one(l2: LinkedList, value):
+    l2 *= value
+    assert l2 == LinkedList()
+
+
+@pytest.mark.parametrize("value", (1, 2, 3, 4, 10))
+def test_linked_list_imul_value_ge_one(l2: LinkedList, value):
+    l2_original = l2.copy()
+    l2 *= value
+    assert l2 == l2_original * value
