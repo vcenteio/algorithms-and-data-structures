@@ -290,6 +290,29 @@ class LinkedList(MutableSequence):
             new_list = self._merge_sorted_lists_into_sorted_list(listA, listB)
             self.head = new_list.head
 
+    def detect_and_remove_cycle(self):
+        """Checks whether there is a cycle in the linked list
+        and remove it if it's found.
+        """
+        # Based on Floyd's Tortoise and Hare Algorithm
+        if self.head is None or self.head.next_node is None:
+            return
+        hare = tortoise = self.head
+        while hare and hare.next_node:
+            tortoise = tortoise.next_node
+            hare = hare.next_node.next_node
+            if hare is tortoise:  # found the meeting point
+                tortoise = self.head
+                while hare.next_node is not tortoise.next_node:
+                    hare = hare.next_node
+                    tortoise = tortoise.next_node
+                if hare is not self.head:
+                    hare.set_next_node(None)
+                else:
+                    while hare.next_node is not self.head:
+                        hare = hare.next_node
+                    hare.set_next_node(None)
+
     @staticmethod
     def _is_valid_iterable(itr: Any) -> bool:
         return isinstance(itr, Iterable) and not isinstance(itr, (str, bytes))
@@ -343,6 +366,7 @@ class LinkedList(MutableSequence):
                     f"by non-int of type '{get_class_name(value)}'"
                 )
             return func(self, value)
+
         return wrapper
 
     def _multiply(self, value: int):

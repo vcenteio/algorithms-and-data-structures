@@ -1499,10 +1499,7 @@ def test_linked_list_imul_value_ge_one(l2: LinkedList, value):
 
 
 @pytest.mark.parametrize(
-    "itr",
-    (
-        [], [i for i in range(1)], [i for i in range(10)]
-    )
+    "itr", ([], [i for i in range(1)], [i for i in range(10)])
 )
 def test_linked_list_len(itr):
     llst = LinkedList(itr)
@@ -1514,8 +1511,8 @@ def test_linked_list_len(itr):
     [
         ([], False),
         ([i for i in range(1)], True),
-        ([i for i in range(10)], True)
-    ]
+        ([i for i in range(10)], True),
+    ],
 )
 def test_linked_list_bool(itr, expected):
     llst = LinkedList(itr)
@@ -1524,13 +1521,46 @@ def test_linked_list_bool(itr, expected):
 
 
 @pytest.mark.parametrize(
-    "itr",
-    (
-        [], [i for i in range(1)], [i for i in range(10)]
-    )
+    "itr", ([], [i for i in range(1)], [i for i in range(10)])
 )
 def test_linked_list_str(itr):
     llst = LinkedList(itr)
     sep = " -> "
     expected_str = f"[{sep.join(map(str, itr))}]"
     assert str(llst) == expected_str
+
+
+@pytest.mark.parametrize(
+    "itr",
+    [
+        tuple(token_bytes(50)),
+        tuple(token_urlsafe(50)),
+        tuple((i for i in range(10))),
+        [chr(i) for i in range(50)],
+        {randint(0, 1000) for _ in range(100)},
+    ],
+)
+def test_linked_list_detect_and_remove_cycle_head_duplicate(itr):
+    llst = LinkedList(itr)
+    llst_original = llst.copy()
+    llst.tail._next = llst.head
+    llst.detect_and_remove_cycle()
+    assert llst == llst_original
+
+
+@pytest.mark.parametrize(
+    ("itr", "index"),
+    [
+        (tuple(token_bytes(50)), randint(0, 49)),
+        (tuple(token_urlsafe(50)), randint(0, 49)),
+        (tuple((i for i in range(10))), randint(0, 9)),
+        ([chr(i) for i in range(50)], randint(0, 49)),
+        ({randint(0, 1000) for _ in range(100)}, randint(0, 99)),
+    ],
+)
+def test_linked_list_detect_and_remove_cycle_random_index(itr, index):
+    llst = LinkedList(itr)
+    llst_original = llst.copy()
+    llst.tail._next = llst[index]
+    llst.detect_and_remove_cycle()
+    assert llst == llst_original
