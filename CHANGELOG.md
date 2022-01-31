@@ -1,7 +1,17 @@
 ## Unreleased
 
+### Feat
+
+- **LinkedList**: add detect_and_remove_cycle method
+- **LinkedList**: add __str__ method
+- **LinkedList**: change __repr__ output
+- **LinkedList**: implement __eq__ method
+- **LinkedList**: make remove method only remove the first occurrence of value
+- **LinkedList**: enable insert to work with negative indexes
+
 ### Fix
 
+- **LinkedList-Node**: set _next to None on object creation
 - **LinkedList**: __*mull__ methods
 - **LinkedList**: __*add__ methods infinite loops
 - **LinkedList**: __*add__ methods
@@ -21,14 +31,6 @@
 - __*add__ methods will serve the sole purpose of being the interface for concatenating linked lists. For other kinds of iterables, the extend method should be used.
 - extend does not rely on __iadd__ anymore; they are
 different interfaces now.
-
-### Feat
-
-- **LinkedList**: add __str__ method
-- **LinkedList**: change __repr__ output
-- **LinkedList**: implement __eq__ method
-- **LinkedList**: make remove method only remove the first occurrence of value
-- **LinkedList**: enable insert to work with negative indexes
 
 ### Refactor
 
