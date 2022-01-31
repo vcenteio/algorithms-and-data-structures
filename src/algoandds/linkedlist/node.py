@@ -13,6 +13,7 @@ class Node(INode):
                 f"'{get_class_name(data).title()}' objects are not hashable."
             )
         self.data = data
+        self._next = None
 
     def __repr__(self) -> str:
         return f"Node({self.data})"
