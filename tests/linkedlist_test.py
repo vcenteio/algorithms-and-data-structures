@@ -1496,3 +1496,14 @@ def test_linked_list_imul_value_ge_one(l2: LinkedList, value):
     l2_original = l2.copy()
     l2 *= value
     assert l2 == l2_original * value
+
+
+@pytest.mark.parametrize(
+    "itr",
+    (
+        [], [i for i in range(1)], [i for i in range(10)]
+    )
+)
+def test_linked_list_len(itr):
+    llst = LinkedList(itr)
+    assert len(llst) == llst.size == llst.__len__()
