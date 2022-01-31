@@ -321,18 +321,18 @@ class LinkedList(MutableSequence):
     @_ensure_other_is_linked_list  # type: ignore[arg-type]
     def __add__(self, other: "LinkedList"):
         new_list = self.copy()
-        new_list._concatenate_linked_list(other)
+        new_list._concatenate_linked_list(other.copy())
         return new_list
 
     @_ensure_other_is_linked_list  # type: ignore[arg-type]
     def __radd__(self, other: "LinkedList"):
         new_list = other.copy()
-        new_list._concatenate_linked_list(self)
+        new_list._concatenate_linked_list(self.copy())
         return new_list
 
     @_ensure_other_is_linked_list  # type: ignore[arg-type]
     def __iadd__(self, other: "LinkedList"):
-        self._concatenate_linked_list(other)
+        self._concatenate_linked_list(other.copy())
         return self
 
     def _multiply(self, value: int):
