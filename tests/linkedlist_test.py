@@ -1521,3 +1521,16 @@ def test_linked_list_bool(itr, expected):
     llst = LinkedList(itr)
     assert llst if expected else not llst
     assert bool(llst) == llst.__bool__()
+
+
+@pytest.mark.parametrize(
+    "itr",
+    (
+        [], [i for i in range(1)], [i for i in range(10)]
+    )
+)
+def test_linked_list_str(itr):
+    llst = LinkedList(itr)
+    sep = " -> "
+    expected_str = f"[{sep.join(map(str, itr))}]"
+    assert str(llst) == expected_str
