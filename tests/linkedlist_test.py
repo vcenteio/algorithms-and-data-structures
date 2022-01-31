@@ -1507,3 +1507,17 @@ def test_linked_list_imul_value_ge_one(l2: LinkedList, value):
 def test_linked_list_len(itr):
     llst = LinkedList(itr)
     assert len(llst) == llst.size == llst.__len__()
+
+
+@pytest.mark.parametrize(
+    ("itr", "expected"),
+    [
+        ([], False),
+        ([i for i in range(1)], True),
+        ([i for i in range(10)], True)
+    ]
+)
+def test_linked_list_bool(itr, expected):
+    llst = LinkedList(itr)
+    assert llst if expected else not llst
+    assert bool(llst) == llst.__bool__()
