@@ -2,6 +2,8 @@
 
 ### Fix
 
+- **LinkedList**: __*mull__ methods
+- **LinkedList**: __*add__ methods infinite loops
 - **LinkedList**: __*add__ methods
 - **LinkedList**: make extend accept str and bytes as iterables
 - **LinkedList**: fix split
@@ -15,6 +17,7 @@
 
 ### BREAKING CHANGE
 
+- Multiplication by negative ints is now possible.
 - __*add__ methods will serve the sole purpose of being the interface for concatenating linked lists. For other kinds of iterables, the extend method should be used.
 - extend does not rely on __iadd__ anymore; they are
 different interfaces now.
